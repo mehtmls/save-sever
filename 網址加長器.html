@@ -1,0 +1,241 @@
+<html>
+
+<head>
+</head>
+
+<body>
+    <div>
+        <select id="lang">
+            <option value="En">English</option>
+            <option value="zh-CN" selected>简体中文</option>
+            <option value="Zh-TW">繁體中文</option>
+            <option value="null" selected disabled>null</option>
+        </select>
+    </div>
+    <div class="linear">
+        <div>
+            <div class="resize">
+                <input class="inputs" type="url" id="url" placeholder="輸入url...">
+            </div>
+            <div class="left">
+                <input type="radio" name="mode" value="1" checked>
+                <a id="l">長度:</a>
+                <input type="number" id="length" min="1" value="20" max="1000" placeholder="長度">
+
+            </div>
+            <div class="left">
+                <input type="radio" name="mode" value="2">
+
+                <div class="resize inputs">
+                    <input class="inputs" type="text" id="utm" placeholder="自訂加長字串">
+                </div>
+
+            </div>
+
+        </div>
+        <div class="Button" id="coven">
+            <a id="longgggggggggggggggggggggggggggggggggggg">加長!!</a>
+        </div>
+        <div class="resize">
+            <input readonly class="inputs" id="output" placeholder="輸出url">
+        </div>
+    </div>
+</body>
+<style>
+    input {
+        width: auto;
+    }
+
+    .inputs {
+        width: 100%;
+        resize: horizontal;
+    }
+
+    .left {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap
+    }
+
+    .resize {
+        resize: horizontal;
+        overflow: auto;
+    }
+
+    .linear {
+        border: #000 dashed;
+        margin: 10px;
+        padding: 10px;
+        border-radius: 20px;
+    }
+
+    .Button {
+        overflow: hidden;
+        position: relative;
+        align-items: center;
+        background: #d4d4d4;
+        border-radius: 8px;
+        display: flex;
+        height: 52px;
+        width: auto;
+        justify-content: center;
+        margin: 4px 0 4px 0;
+        padding: 0 8px 0 8px;
+        transition: background 0.1s ease;
+        /* 新增這行：點擊時背景色變化 */
+    }
+
+    .Button a {
+        user-select: none;
+
+    }
+
+    .b2Rnsc:active {
+        background: #a0a0a0;
+        /* 新增這行：點擊時的背景色 */
+    }
+
+    .ripple {
+        position: absolute;
+        overflow: hidden;
+        border-radius: 50%;
+        background-color: rgba(0, 0, 0, 0.25);
+        transform: scale(0);
+        animation: ripple 600ms linear;
+    }
+
+    @keyframes ripple {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+</style>
+<script>
+    var lang = navigator.language
+    function switchlang(language) {
+        if (!language) {
+            language = lang
+        }
+        switch (language.toLowerCase()) {
+            case "zh-cn":
+            case "zh":
+                document.getElementById("url").placeholder = "输入url..."
+                document.getElementById("length").placeholder = "长度"
+                document.getElementById("utm").placeholder = "自訂加長字串"
+                document.getElementById("l").innerHTML = "长度:"
+                document.getElementById("output").placeholder = "输出url"
+                document.getElementById("longgggggggggggggggggggggggggggggggggggg").innerHTML = "加长!!"
+                document.getElementById("lang").selectedIndex=1
+                break;
+            case "zh-tw":
+                document.getElementById("url").placeholder = "輸入url..."
+                document.getElementById("length").placeholder = "長度"
+                document.getElementById("utm").placeholder = "自定義加長字串"
+                document.getElementById("l").innerHTML = "長度:"
+                document.getElementById("output").placeholder = "輸出url"
+                document.getElementById("longgggggggggggggggggggggggggggggggggggg").innerHTML = "加長!!"
+                document.getElementById("lang").selectedIndex=2
+                break;
+            default:
+                document.getElementById("url").placeholder = "Enter url..."
+                document.getElementById("length").placeholder = "Length"
+                document.getElementById("utm").placeholder = "Custom length string"
+                document.getElementById("l").innerHTML = "Length:"
+                document.getElementById("output").placeholder = "Output url"
+                document.getElementById("longgggggggggggggggggggggggggggggggggggg").innerHTML = "Longen!!"
+                document.getElementById("lang").selectedIndex=0
+                break;
+        }
+    }
+    window.onload = function () {
+        switchlang();
+    }
+    let select = document.getElementById("lang")
+    select.addEventListener("change", (function () {
+        const switchValue = select.options[select.selectedIndex].value;
+        console.log(switchValue)
+        switchlang(switchValue)
+    }
+    )
+    );
+    //-------------------------------------------------------------------------------------------------------------------
+    var ture = true
+    var flase = false
+    function generateRandomString(num) {
+        const characters =
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        let result1 = ""
+        for (let i = 0; i < num; i++) {
+            result1 += characters[Math.floor(Math.random() * characters.length)]
+        }
+        return result1;
+    }
+
+    console.log(generateRandomString(100));
+    function getUrl(p) {
+
+        if (document.getElementById("url").value.length <= 0) {
+            alert("請輸入網址")
+            return ""
+        } else {
+            let utm = []
+            if (!!p.word && p.word.length > 0) {
+                utm.push(generateRandomString(10) + "=" + p.word)
+            } else if (p.length > 0) {
+                utm.push(generateRandomString(10) + "=" + (generateRandomString(p.length)))
+            }
+
+
+            let inter = (document.getElementById("url").value.indexOf("?") >= 0) ? "&" : "?"
+            let protocol = ""
+            if (document.getElementById("url").value.indexOf("https://") == 0 || document.getElementById("url").value.indexOf("http://") == 0) {
+                protocol = ""
+            } else {
+                protocol = "https://"
+            }
+            return protocol + document.getElementById("url").value + inter + utm.join("&")
+        }
+    }
+    function validURL(str) {
+        var pattern = new RegExp('^(https?:\\/\\/)?' + // protocol
+            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+            '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+            '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+            '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+        return !!pattern.test(str);
+    }
+    function rippleEffect(event) {
+        var element = event.currentTarget;
+
+        var circle = document.createElement('span');
+        var diameter = Math.max(element.clientWidth, element.clientHeight);
+        var radius = diameter / 2;
+
+        circle.style.width = circle.style.height = `${diameter}px`;
+        circle.style.left = `${event.clientX - element.offsetLeft - radius}px`;
+        circle.style.top = `${event.clientY - element.offsetTop - radius}px`;
+        circle.classList.add('ripple');
+
+        const ripple = element.getElementsByClassName('ripple')[0];
+
+        if (ripple) {
+            ripple.remove();
+        }
+
+        element.appendChild(circle);
+    }
+    document.getElementById("coven").onclick = function () {
+        rippleEffect(event)
+        if (document.getElementsByName("mode")[0].checked == ture) {
+            document.getElementById("output").value = getUrl({ length: parseFloat(document.getElementById("length").value) })
+        } else {
+            document.getElementById("output").value = getUrl({ word: document.getElementById("utm").value })
+        }
+    }
+
+</script>
+
+</html>
