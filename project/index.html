@@ -59,27 +59,41 @@
             padding: 10px;
             border-radius: 20px;
             min-width: 260px;
-            min-height: 300px;
+            min-height: 200px;
         }
-
+@media (max-width: 666px) {
+    #main_box {
+        flex-wrap: wrap;
+    }
+}
         .middle {
             width: 2%;
             /*[100-(49x2)]%*/
         }
 
         .rightBox {
+            position: relative;
             width: 49%;
             border: #000 dashed;
             margin: 10px;
             overflow: hidden;
-            border-radius: 20px;
+            border-radius: 10px;
+            min-width: 280px;
+            min-height: 220px;
         }
 
         .apps {
+            top:35px;
+            position:absolute;
+            width: 100%;
+            height: 300px;
             display: flex;
             align-items: center;
             flex-direction: column;
             flex-wrap: nowrap;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            
             justify-content: flex-start;
         }
 
@@ -103,18 +117,27 @@
 .app:hover {
     background: #d4d4d4;
    border-radius: 10px;
-   transform: scale(1.1);
+   transform: scale(1.01);
 
 }
 .app:active {
-  transform: scale(0.9);
+  transform: scale(0.99);
 }
         .mask {
+            position: absolute;
             width: 100%;
-            height: 40px;
+            height: 10px;
             background: linear-gradient(to bottom, #434343ff, #43434300);
+            z-index: 999;
         }
-
+        .unmask {
+            position: absolute;
+            width: 100%;
+            height: 10px;
+            top:320px;
+            background: linear-gradient(to top, #434343ff, #43434300);
+            z-index: 998;
+        }
         .b2Rnsc {
             overflow: hidden;
             position: relative;
@@ -127,7 +150,7 @@
             justify-content: center;
             margin: 4px 0 4px 0;
             padding: 0 8px 0 8px;
-            transition: background 0.3s ease;
+            transition: background 0.1s ease;
             /* 新增這行：點擊時背景色變化 */
         }
 
@@ -150,6 +173,28 @@
             font-weight: bold;
         }
 
+        .apps::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.apps::-webkit-scrollbar-track {
+    background-color: #eeeeee;
+    -webkit-border-radius: 2em;
+    -moz-border-radius: 2em;
+    border-radius: 2em;
+}
+
+.apps::-webkit-scrollbar-thumb {
+    transition: background 0.2s linear;
+    background: #bdbdbd;
+    -webkit-border-radius: 2em;
+    -moz-border-radius: 2em;
+    border-radius: 2em;
+}
+.apps::-webkit-scrollbar-thumb:hover {
+    background: #8e8e8e;
+}
         @keyframes ripple {
             to {
                 transform: scale(4);
@@ -191,11 +236,14 @@
             <div class="moreapp">
                 <h3>更多作品</h3>
             </div>
-            <div class="mask"></div>
+           
             <div class="apps">
                 <!--插入作品-->
                 
             </div>
+             <div class="mask"></div>
+            <div style="height: 300px;"></div>
+            <div class="unmask"></div>
         </div>
         <div style="position: absolute;">
             <img style="user-select: none;" class="ToBeimg"
@@ -226,12 +274,11 @@
 
 
 
-newapp({
+            newapp({
     name: "網址加長器",
 common: "簡報必備神器",
-url:"https://vdcfvhbxzvhjbs.github.io/save-sever/project/longUrl"
+url:"https://mehtmls.github.io/save-sever/project/longUrl"
 })
-
 
 
 
