@@ -13,21 +13,18 @@
         #c1 {
             background: #fbf7fe;
         }
-
-
     </style>
 </head>
 
-<body style="overflow-x:hidden;overflow-y:hidden;display: flex;align-items: center;justify-content: center;align-items: center;flex-direction: row;">
+<body
+    style="overflow-x:hidden;overflow-y:hidden;display: flex;align-items: center;justify-content: center;align-items: center;flex-direction: row;">
     <div id="main">
 
-        <canvas id="c1" width="1024" height="1024">
-            <span>
-
-            </span>
+        <canvas id="c1" width="1024" height="1024" style="height: 100%;width: 100%;">
         </canvas>
-</div>
+    </div>
     <script>
+        var minwh = Math.min(window.innerHeight, window.innerWidth)
         var cx, cy;
         var glposition;
         var glright;
@@ -220,6 +217,7 @@
             gl.finish();
         }
         window.onresize = function () {
+            minwh = Math.min(window.innerHeight, window.innerWidth)
             cx = document.body.clientWidth;
             cy = document.body.clientHeight;
             if (cx > cy) {
@@ -228,11 +226,12 @@
             else {
                 cy = cx;
             }
-            document.getElementById("main").style.width = 1024 + "px";
-            document.getElementById("main").style.height = 1024 + "px";
-            document.getElementById("main").style.transform = "scale(" + cx / 1024 + "," + cy / 1024 + ")";
+            document.getElementById("main").style.width = minwh + "px";
+            document.getElementById("main").style.height = minwh + "px";
+            //document.getElementById("main").style.transform = "scale(" + cx / 1024 + "," + cy / 1024 + ")";
         }
         window.onload = function () {
+            minwh = Math.min(window.innerHeight, window.innerWidth)
             cx = document.body.clientWidth;
             cy = document.body.clientHeight;
             if (cx > cy) {
@@ -241,9 +240,9 @@
             else {
                 cy = cx;
             }
-            document.getElementById("main").style.width = 1024 + "px";
-            document.getElementById("main").style.height = 1024 + "px";
-            document.getElementById("main").style.transform = "scale(" + cx / 1024 + "," + cy / 1024 + ")";
+            document.getElementById("main").style.width = minwh + "px";
+            document.getElementById("main").style.height = minwh + "px";
+            //document.getElementById("main").style.transform = "scale(" + cx / 1024 + "," + cy / 1024 + ")";
             var positions = [-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, -1.0, 0.0, 1.0, 1.0, 0.0, -1.0, 1.0, 0.0];
             var VSHADER_SOURCE =
                 "#version 100 \n" +
