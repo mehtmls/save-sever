@@ -61,11 +61,13 @@
             min-width: 260px;
             min-height: 200px;
         }
-@media (max-width: 666px) {
-    #main_box {
-        flex-wrap: wrap;
-    }
-}
+
+        @media (max-width: 666px) {
+            #main_box {
+                flex-wrap: wrap;
+            }
+        }
+
         .middle {
             width: 2%;
             /*[100-(49x2)]%*/
@@ -83,8 +85,8 @@
         }
 
         .apps {
-            top:35px;
-            position:absolute;
+            top: 35px;
+            position: absolute;
             width: 100%;
             height: 300px;
             display: flex;
@@ -93,13 +95,13 @@
             flex-wrap: nowrap;
             overflow-y: scroll;
             overflow-x: hidden;
-            
+
             justify-content: flex-start;
         }
 
         .app {
             transition-duration: 0.4s;
-            
+
             border-radius: 20px;
             overflow: hidden;
             border: #000 dashed;
@@ -114,15 +116,18 @@
             flex-wrap: nowrap;
             justify-content: space-between;
         }
-.app:hover {
-    background: #d4d4d4;
-   border-radius: 10px;
-   transform: scale(1.01);
 
-}
-.app:active {
-  transform: scale(0.99);
-}
+        .app:hover {
+            background: #d4d4d4;
+            border-radius: 10px;
+            transform: scale(1.01);
+
+        }
+
+        .app:active {
+            transform: scale(0.99);
+        }
+
         .mask {
             position: absolute;
             width: 100%;
@@ -130,14 +135,16 @@
             background: linear-gradient(to bottom, #434343ff, #43434300);
             z-index: 999;
         }
+
         .unmask {
             position: absolute;
             width: 100%;
             height: 10px;
-            top:320px;
+            top: 320px;
             background: linear-gradient(to top, #434343ff, #43434300);
             z-index: 998;
         }
+
         .b2Rnsc {
             overflow: hidden;
             position: relative;
@@ -174,27 +181,29 @@
         }
 
         .apps::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
+            width: 8px;
+            height: 8px;
+        }
 
-.apps::-webkit-scrollbar-track {
-    background-color: #eeeeee;
-    -webkit-border-radius: 2em;
-    -moz-border-radius: 2em;
-    border-radius: 2em;
-}
+        .apps::-webkit-scrollbar-track {
+            background-color: #eeeeee;
+            -webkit-border-radius: 2em;
+            -moz-border-radius: 2em;
+            border-radius: 2em;
+        }
 
-.apps::-webkit-scrollbar-thumb {
-    transition: background 0.2s linear;
-    background: #bdbdbd;
-    -webkit-border-radius: 2em;
-    -moz-border-radius: 2em;
-    border-radius: 2em;
-}
-.apps::-webkit-scrollbar-thumb:hover {
-    background: #8e8e8e;
-}
+        .apps::-webkit-scrollbar-thumb {
+            transition: background 0.2s linear;
+            background: #bdbdbd;
+            -webkit-border-radius: 2em;
+            -moz-border-radius: 2em;
+            border-radius: 2em;
+        }
+
+        .apps::-webkit-scrollbar-thumb:hover {
+            background: #8e8e8e;
+        }
+
         @keyframes ripple {
             to {
                 transform: scale(4);
@@ -227,8 +236,7 @@
                 <a class="Bold" id="millisecond">---</a>
             </p>
             <a>你是第</a>
-            <img src="https://www.f-counter.net/j/64/1731488046/"
-                style="border:0;padding:0;margin:0;height: 40px;" alt="计数器">
+            <img  src="http://counter.i2yes.com/counter.php?p=mehtmls.github.io_sgvk&amp;v=mehtmls.github.io&amp;d=6&amp;r=1&amp;t=font126&amp;n=0" title="count" alt="?">
             <a>位訪客</a><br />
         </div>
 
@@ -236,12 +244,12 @@
             <div class="moreapp">
                 <h3>更多作品</h3>
             </div>
-           
+
             <div class="apps">
                 <!--插入作品-->
-                
+
             </div>
-             <div class="mask"></div>
+            <div class="mask"></div>
             <div style="height: 300px;"></div>
             <div class="unmask"></div>
         </div>
@@ -254,7 +262,7 @@
             function newapp(jsons) {
                 var divs = document.createElement("div")
                 divs.className = "app"
-                divs.innerHTML=`
+                divs.innerHTML = `
                     <div style="width: 90%;">
                         <a style="font-weight: bold;user-select: none;">${jsons.name}</a>
                         <div style="height: auto;width: 100%;">
@@ -264,7 +272,7 @@
                     </div>
                         <a style="font-size: 29px;user-select: none;">»</a>
                 `
-                divs.onclick = function(event) {
+                divs.onclick = function (event) {
                     audio.play();
                     window.open(jsons.url, "_blank");
                 }
@@ -275,20 +283,25 @@
 
 
             newapp({
-    name: "網址加長器",
-common: "簡報必備神器",
-url:"https://mehtmls.github.io/save-sever/project/longUrl"
-})
+                name: "網址加長器",
+                common: "簡報必備神器",
+                url: "https://mehtmls.github.io/save-sever/project/longUrl"
+            })
 
-newapp({
-    name: "毒蘑菇",
-common: "磚業顯卡測逝".split("").join(" "),
-url:"https://mehtmls.github.io/save-sever/project/do-mo-gu"
-})
+            newapp({
+                name: "毒蘑菇",
+                common: "磚業顯卡測逝".split("").join(" "),
+                url: "https://mehtmls.github.io/save-sever/project/do-mo-gu"
+            })
 
-
+            newapp({
+                name: "圖庫",
+                common: "來看看有沒有一些神金照片",
+                url: "https://mehtmls.github.io/save-sever/project/img"
+            })
             //apps--------------------------------------------------------
             //***********@author：Robert Penner and cloudgamer*************
+
             var Tween = {
                 Linear: function (t, b, c, d) { return c * t / d + b; },
                 Quad: {
