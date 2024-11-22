@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta content="telephone=no" name="format-detection">
+    <meta http-equiv="Cache-Control" content="no-transform ">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta name="applicable-device" content="mobile">
+
+    <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <title>科学计算器</title>
+    <meta name="description" content="科学计算器">
+    <meta name="keywords" content="科学计算器">
+    <script>
+        function FloatAdd(f, d) {
+            var c,
+            b,
+            a;
+            try {
+                c = f.toString().split(".")[1].length
+            } catch (g) {
+                c = 0
+            }
+            try {
+                b = d.toString().split(".")[1].length
+            } catch (g) {
+                b = 0
+            }
+            a = Math.pow(10, Math.max(c, b));
+            return (f * a + d * a) / a
+        }
+
+        function FloatSub(f, d) {
+            var c,
+            b,
+            a,
+            h;
+            try {
+                c = f.toString().split(".")[1].length
+            } catch (g) {
+                c = 0
+            }
+            try {
+                b = d.toString().split(".")[1].length
+            } catch (g) {
+                b = 0
+            }
+            a = Math.pow(10, Math.max(c, b));
+            h = (c >= b) ? c: b;
+            return ((f * a - d * a) / a).toFixed(h)
+        }
+
+        function FloatMul(d, b) {
+            var a = 0,
+            f = d.toString(),
+            c = b.toString();
+            try {
+                a += f.split(".")[1].length
+            } catch (g) {}
+            try {
+                a += c.split(".")[1].length
+            } catch (g) {}
+            return Number(f.replace(".", "")) * Number(c.replace(".", "")) / Math.pow(10, a)
+        }
+
+        function FloatDiv(arg1, arg2) {
+            var t1 = 0,
+            t2 = 0,
+            r1,
+            r2;
+            try {
+                t1 = arg1.toString().split(".")[1].length
+            } catch (e) {}
+            try {
+                t2 = arg2.toString().split(".")[1].length
+            } catch (e) {}
+            with(Math) {
+                r1 = Number(arg1.toString().replace(".", ""));
+                r2 = Number(arg2.toString().replace(".", ""));
+                return (r1 / r2) * pow(10, t2 - t1)
+            }
+        }
+        var g_type = 0;
+        var endNumber = true;
+        var mem = 0,
+        carry = 10,
+        layer = 0;
+        var hexnum = "0123456789abcdef";
+        var angle = "d",
+        stack = "",
+        level = "0";
+        var $c_get = function(a) {
+            return document.getElementById(a)
+        };
+        var lastOperator = "";
+        var isMaxLen = false;
+
+        function inputkey(b, c) {
+            if (isMaxLen == false) {
+                if (lastOperator == "=") {
+                    $c_get("completeEprsPanel").innerHTML = b
+                } else {
+                    if (lastOperator == "m") {
+                        $c_get("completeEprsPanel").innerHTML = ""
+                    }
+                    $c_get("completeEprsPanel").innerHTML += b
+                }
+                var a = b.charCodeAt(0);
+                if ((carry == 2 && (a == 48 || a == 49)) || (carry == 8 && a >= 48 && a <= 55) || (carry == 10 && (a >= 48 && a <= 57 || a == 46)) || (carry == 16 && ((a >= 48 && a <= 57) || (a >= 97 && a <= 102)))) {
+                    if (endNumber) {
+                        endNumber = false;
+                        if (a == 46) {
+                            if ($c_get("gaoji").value.indexOf(".") != -1) {} else {
+                                $c_get("gaoji").value += b
+                            }
+                        } else {
+                            $c_get("gaoji").value = b
+                        }
+                    } else {
+                        if ($c_get("gaoji").value == null || $c_get("gaoji").value == "0") {
+                            if (a == 46) {
+                                if ($c_get("gaoji").value.indexOf(".") != -1) {} else {
+                                    $c_get("gaoji").value += b
+                                }
+                            } else {
+                                $c_get("gaoji").value = b
+                            }
+                        } else {
+                            if (a == 46) {
+                                if ($c_get("gaoji").value.indexOf(".") != -1) {} else {
+                                    $c_get("gaoji").value += b
+                                }
+                            } else {
+                                $c_get("gaoji").value += b
+                            }
+                        }
+                    }
+                }
+                lastOperator = "";
+                try {
+                    var g = c || window.event;
+                    var f = g.srcElement || g.target;
+                    f.blur()
+                } catch (d) {}
+                if ($c_get("gaoji").value.length > 16) {
+                    isMaxLen = true
+                }
+            } else {
+                alert("\u53ea\u80fd\u8f93\u5165\u4e0d\u5927\u4e8e17\u4f4d\u7684\u5b57\u7b26")
+            }
+        }
+
+        function changeSign(a) {
+            if ($c_get("gaoji").value != "0") {
+                if ($c_get("gaoji").value.substr(0, 1) == "-") {
+                    $c_get("gaoji").value = $c_get("gaoji").value.substr(1)
+                } else {
+                    $c_get("gaoji").value = "-" + $c_get("gaoji").value
+                }
+            }
+            try {
+                var d = a || window.event;
+                var c = d.srcElement || d.target;
+                c.blur()
+            } catch (b) {}
+        }
+
+        function inputfunction(a, b, c) {
+            endNumber = true;
+            if ($c_get("upperFile").checked) {
+                $c_get("gaoji").value = decto(funcalc(b, (todec($c_get("gaoji").value, carry))), carry).toFixed(12)
+            } else {
+                $c_get("gaoji").value = decto(funcalc(a, (todec($c_get("gaoji").value, carry))), carry).toFixed(12)
+            }
+            $c_get("upperFile").checked = false;
+            $c_get("hyperbolic").checked = false;
+            inputshift();
+            try {
+                var g = c || window.event;
+                var f = g.srcElement || g.target;
+                f.blur()
+            } catch (d) {}
+        }
+
+        function inputtrig(c, a, i, b, d) {
+            if ($c_get("hyperbolic").checked) {
+                inputfunction(i, b)
+            } else {
+                inputfunction(c, a)
+            }
+            try {
+                var h = d || window.event;
+                var g = h.srcElement || h.target;
+                g.blur()
+            } catch (f) {}
+        }
+
+        function operation(g, b, c) {
+            endNumber = true;
+            var a = stack.substr(stack.lastIndexOf("(") + 1) + $c_get("gaoji").value;
+            while (b != 0 && (b <= (level.charAt(level.length - 1)))) {
+                a = parse(a);
+                level = level.slice(0, -1)
+            }
+            if (a.match(/^(.*\d[\+\-\*\/\%\^\&\|x])?([+-]?[0-9a-f\.]+)$/)) {}
+            $c_get("gaoji").value = RegExp.$2;
+            stack = stack.substr(0, stack.lastIndexOf("(") + 1) + a + g;
+            $c_get("operator").value = " " + g + " ";
+            level = level + b;
+            $c_get("completeEprsPanel").innerHTML += $c_get("operator").value;
+            lastOperator = g;
+            try {
+                var h = c || window.event;
+                var f = h.srcElement || h.target;
+                f.blur()
+            } catch (d) {}
+            isMaxLen = false
+        }
+
+        function addbracket(d, a) {
+            endNumber = true;
+            document.calc.display.value = 0;
+            stack = stack + "(";
+            document.calc.operator.value = "   ";
+            level = level + 0;
+            layer += 1;
+            document.calc.bracket.value = "(=" + layer;
+            if (lastOperator == "=") {
+                $c_get("completeEprsPanel").innerHTML = d.value
+            } else {
+                if (lastOperator == "m") {
+                    $c_get("completeEprsPanel").innerHTML = ""
+                }
+                $c_get("completeEprsPanel").innerHTML += d.value
+            }
+            lastOperator = d.value;
+            try {
+                var f = a || window.event;
+                var c = f.srcElement || f.target;
+                c.blur()
+            } catch (b) {}
+        }
+
+        function disbracket(f, b) {
+            endNumber = true;
+            var a = stack.substr(stack.lastIndexOf("(") + 1) + document.calc.display.value;
+            while ((level.charAt(level.length - 1)) > 0) {
+                a = parse(a);
+                level = level.slice(0, -1)
+            }
+            document.calc.display.value = a;
+            stack = stack.substr(0, stack.lastIndexOf("("));
+            document.calc.operator.value = "   ";
+            level = level.slice(0, -1);
+            layer -= 1;
+            if (layer > 0) {
+                document.calc.bracket.value = "(=" + layer
+            } else {
+                document.calc.bracket.value = ""
+            }
+            if (lastOperator == "=") {
+                $c_get("completeEprsPanel").innerHTML = f.value
+            } else {
+                if (lastOperator == "m") {
+                    $c_get("completeEprsPanel").innerHTML = ""
+                }
+                $c_get("completeEprsPanel").innerHTML += f.value
+            }
+            lastOperator = f.value;
+            try {
+                var g = b || window.event;
+                var d = g.srcElement || g.target;
+                d.blur()
+            } catch (c) {}
+        }
+
+        function result(b) {
+            endNumber = true;
+            while (layer > 0) {
+                disbracket()
+            }
+            var a = stack + $c_get("gaoji").value;
+            while ((level.charAt(level.length - 1)) > 0) {
+                a = parse(a);
+                level = level.slice(0, -1)
+            }
+            c_get("gaoji").value = a;
+            c_get("bracket").value = "";
+            c_get("operator").value = "";
+            stack = "";
+            level = "0";
+            lastOperator = "=";
+            try {
+                var f = b || window.event;
+                var d = f.srcElement || f.target;
+                d.blur()
+            } catch (c) {}
+            isMaxLen = false
+        }
+
+        function backspace(a) {
+            try {
+                document.getElementById("completeEprsPanel").innerHTML = document.getElementById("completeEprsPanel").innerHTML.substring(0, document.getElementById("completeEprsPanel").innerHTML.length - 1)
+            } catch (c) {}
+            if (!endNumber) {
+                if (c_get("gaoji").value.length > 1) {
+                    c_get("gaoji").value = c_get("gaoji").value.substring(0, c_get("gaoji").value.length - 1)
+                } else {
+                    c_get("gaoji").value = 0
+                }
+            }
+            try {
+                var d = a || window.event;
+                var b = d.srcElement || d.target;
+                b.blur()
+            } catch (c) {}
+            if (c_get("gaoji").value.length <= 16) {
+                isMaxLen = false
+            }
+        }
+
+        function clearall(a) {
+            c_get("gaoji").value = 0;
+            endNumber = true;
+            stack = "";
+            level = "0";
+            layer = "";
+            c_get("operator").value = "";
+            c_get("bracket").value = "";
+            document.getElementById("completeEprsPanel").innerHTML = "";
+            try {
+                var d = a || window.event;
+                var c = d.srcElement || d.target;
+                c.blur()
+            } catch (b) {}
+            isMaxLen = false
+        }
+
+        function inputChangCarry(a, b) {
+            endNumber = true;
+            c_get("gaoji").value = (decto(todec(c_get("gaoji").value, carry), a));
+            carry = a;
+            c_get("sin").className = (carry != 10) ? "cal_btn  cal_btn_dis ": "cal_btn cal_btn_gre";
+            c_get("cos").className = (carry != 10) ? "cal_btn cal_btn_dis ": "cal_btn cal_btn_gre";
+            c_get("tan").className = (carry != 10) ? "cal_btn cal_btn_dis ": "cal_btn cal_btn_gre";
+            c_get("bt").className = (carry != 10) ? "cal_btn cal_btn_dis ": "cal_btn cal_btn_gre";
+            c_get("pi").className = (carry != 10) ? "cal_btn cal_btn_dis ": "cal_btn cal_btn_gre";
+            c_get("e").className = (carry != 10) ? "cal_btn cal_btn_dis ": "cal_btn cal_btn_gre";
+            c_get("completeDot").className = (carry != 10) ? "cal_btn cal_btn_dis ": "cal_btn ";
+            c_get("complete2").className = (carry <= 2) ? "cal_btn cal_btn_dis": "cal_btn fontArial";
+            c_get("complete3").className = (carry <= 2) ? "cal_btn cal_btn_dis": "cal_btn fontArial";
+            c_get("complete4").className = (carry <= 2) ? "cal_btn cal_btn_dis": "cal_btn fontArial";
+            c_get("complete5").className = (carry <= 2) ? "cal_btn cal_btn_dis": "cal_btn fontArial";
+            c_get("complete6").className = (carry <= 2) ? "cal_btn cal_btn_dis": "cal_btn fontArial";
+            c_get("complete7").className = (carry <= 2) ? "cal_btn cal_btn_dis": "cal_btn fontArial";
+            c_get("complete8").className = (carry <= 8) ? "cal_btn cal_btn_dis": "cal_btn fontArial";
+            c_get("complete9").className = (carry <= 8) ? "cal_btn cal_btn_dis": "cal_btn fontArial";
+            c_get("ka").className = (carry <= 10) ? "cal_btn cal_btn_dis": "cal_btn cal_btn_gre";
+            c_get("kb").className = (carry <= 10) ? "cal_btn cal_btn_dis": "cal_btn cal_btn_gre";
+            c_get("kc").className = (carry <= 10) ? "cal_btn cal_btn_dis": "cal_btn cal_btn_gre";
+            c_get("kd").className = (carry <= 10) ? "cal_btn cal_btn_dis": "cal_btn cal_btn_gre";
+            c_get("ke").className = (carry <= 10) ? "cal_btn cal_btn_dis": "cal_btn cal_btn_gre";
+            c_get("kf").className = (carry <= 10) ? "cal_btn cal_btn_dis": "cal_btn cal_btn_gre";
+            try {
+                var f = b || window.event;
+                var d = f.srcElement || f.target;
+                d.blur()
+            } catch (c) {}
+        }
+
+        function inputChangAngle(a, b) {
+            endNumber = true;
+            angle = a;
+            if (angle == "d") {
+                c_get("gaoji").value = radiansToDegress(c_get("gaoji").value)
+            } else {
+                c_get("gaoji").value = degressToRadians(c_get("gaoji").value)
+            }
+            endNumber = true;
+            try {
+                var f = b || window.event;
+                var d = f.srcElement || f.target;
+                d.blur()
+            } catch (c) {}
+        }
+
+        function inputshift(a) {
+            if (c_get("upperFile").checked) {
+                c_get("bt").innerHTML = "deg";
+                c_get("ln").innerHTML = "exp";
+                c_get("log").innerHTML = "expd";
+                if (c_get("hyperbolic").checked) {
+                    c_get("sin").innerHTML = "ahs";
+                    c_get("cos").innerHTML = "ahc";
+                    c_get("tan").innerHTML = "aht"
+                } else {
+                    c_get("sin").innerHTML = "asin";
+                    c_get("cos").innerHTML = "acos";
+                    c_get("tan").innerHTML = "atan"
+                }
+                c_get("sqr").innerHTML = "x^.5";
+                c_get("cube").innerHTML = "x^.3";
+                c_get("changeDecimal").innerHTML = "\u5c0f\u6570"
+            } else {
+                c_get("bt").innerHTML = "d.ms";
+                c_get("ln").innerHTML = "ln";
+                c_get("log").innerHTML = "log";
+                if (c_get("hyperbolic").checked) {
+                    c_get("sin").innerHTML = "hsin";
+                    c_get("cos").innerHTML = "hcos";
+                    c_get("tan").innerHTML = "htan"
+                } else {
+                    c_get("sin").innerHTML = "sin";
+                    c_get("cos").innerHTML = "cos";
+                    c_get("tan").innerHTML = "tan"
+                }
+                c_get("sqr").innerHTML = "x^2";
+                c_get("cube").innerHTML = "x^3";
+                c_get("changeDecimal").innerHTML = "\u53d6\u6574"
+            }
+            try {
+                var d = a || window.event;
+                var c = d.srcElement || d.target;
+                c.blur()
+            } catch (b) {}
+        }
+
+        function clearmemory(a) {
+            mem = 0;
+            c_get("memory").value = " ";
+            try {
+                var d = a || window.event;
+                var c = d.srcElement || d.target;
+                c.blur()
+            } catch (b) {}
+        }
+
+        function getmemory(a) {
+            endNumber = true;
+            c_get("gaoji").value = decto(mem, carry);
+            try {
+                var d = a || window.event;
+                var c = d.srcElement || d.target;
+                c.blur()
+            } catch (b) {}
+        }
+
+        function putmemory(a) {
+            endNumber = true;
+            if (c_get("gaoji").value != 0) {
+                mem = todec(c_get("gaoji").value, carry);
+                c_get("memory").value = " M "
+            } else {
+                c_get("memory").value = "   "
+            }
+            lastOperator = "m";
+            try {
+                var d = a || window.event;
+                var c = d.srcElement || d.target;
+                c.blur()
+            } catch (b) {}
+        }
+
+        function addmemory(a) {
+            endNumber = true;
+            mem = parseFloat(mem) + parseFloat(todec(c_get("gaoji").value, carry));
+            if (mem == 0) {
+                c_get("memory").value = "   "
+            } else {
+                c_get("memory").value = " M "
+            }
+            lastOperator = "m";
+            try {
+                var d = a || window.event;
+                var c = d.srcElement || d.target;
+                c.blur()
+            } catch (b) {}
+        }
+
+        function multimemory(a) {
+            endNumber = true;
+            mem = parseFloat(mem) * parseFloat(todec(c_get("gaoji").value, carry));
+            if (mem == 0) {
+                c_get("memory").value = "   "
+            } else {
+                c_get("memory").value = " M "
+            }
+            lastOperator = "m";
+            try {
+                var d = a || window.event;
+                var c = d.srcElement || d.target;
+                c.blur()
+            } catch (b) {}
+        }
+
+        function todec(c, d) {
+            if (d == 10 || c == 0) {
+                return (c)
+            }
+            var e = (c.charAt(0) == "-");
+            if (e) {
+                c = c.substr(1)
+            }
+            var a = 0;
+            for (var b = 1; b <= c.length; b++) {
+                a = a * d + hexnum.indexOf(c.charAt(b - 1))
+            }
+            if (e) {
+                a = -a
+            }
+            return (a)
+        }
+
+        function decto(c, b) {
+            var d = (c < 0);
+            if (b == 10 || c == 0) {
+                return (c)
+            }
+            c = "" + Math.abs(c);
+            var a = "";
+            while (c != 0) {
+                a = hexnum.charAt(c % b) + a;
+                c = Math.floor(c / b)
+            }
+            if (d) {
+                a = "-" + a
+            }
+            return (a)
+        }
+
+        function parse(a) {
+            if (a.match(/^(.*\d[\+\-\*\/\%\^\&\|x\<])?([+-]?[0-9a-f\.]+)([\+\-\*\/\%\^\&\|x\<])([+-]?[0-9a-f\.]+)$/)) {
+                return (RegExp.$1 + cypher(RegExp.$2, RegExp.$3, RegExp.$4))
+            } else {
+                return (a)
+            }
+        }
+
+        function cypher(c, b, a) {
+            c = todec(c, carry);
+            a = todec(a, carry);
+            if (b == "+") {
+                return (decto(parseFloat(c) + parseFloat(a), carry))
+            }
+            if (b == "-") {
+                return (decto(c - a, carry))
+            }
+            if (b == "*") {
+                return (decto(FloatMul(c, a), carry))
+            }
+            if (b == "/" && a != 0) {
+                return (decto(FloatDiv(c, a), carry))
+            }
+            if (b == "%") {
+                return (decto(c % a, carry))
+            }
+            if (b == "&") {
+                return (decto(c & a, carry))
+            }
+            if (b == "|") {
+                return (decto(c | a, carry))
+            }
+            if (b == "^") {
+                return (decto(Math.pow(c, a), carry))
+            }
+            if (b == "x") {
+                return (decto(c ^ a, carry))
+            }
+            if (b == "<") {
+                return (decto(c << a, carry))
+            }
+            alert("\u9664\u6570\u4e0d\u80fd\u4e3a\u96f6");
+            return (c)
+        }
+
+        function funcalc(fun, num) {
+            with(Math) {
+                if (fun == "pi") {
+                    return (PI)
+                }
+                if (fun == "e") {
+                    return (E)
+                }
+                if (fun == "abs") {
+                    return (abs(num))
+                }
+                if (fun == "ceil") {
+                    return (ceil(num))
+                }
+                if (fun == "round") {
+                    return (round(num))
+                }
+                if (fun == "floor") {
+                    return (floor(num))
+                }
+                if (fun == "deci") {
+                    return (num - floor(num))
+                }
+                if (fun == "ln" && num > 0) {
+                    return (log(num))
+                }
+                if (fun == "exp") {
+                    return (exp(num))
+                }
+                if (fun == "log" && num > 0) {
+                    return (log(num) * LOG10E)
+                }
+                if (fun == "expdec") {
+                    return (pow(10, num))
+                }
+                if (fun == "cube") {
+                    return (num * num * num)
+                }
+                if (fun == "cubt") {
+                    return (pow(num, 1 / 3))
+                }
+                if (fun == "sqr") {
+                    return (num * num)
+                }
+                if (fun == "sqrt" && num >= 0) {
+                    return (sqrt(num))
+                }
+                if (fun == "!") {
+                    return (factorial(num))
+                }
+                if (fun == "recip" && num != 0) {
+                    return (1 / num)
+                }
+                if (fun == "dms") {
+                    return (dms(num))
+                }
+                if (fun == "deg") {
+                    return (deg(num))
+                }
+                if (fun == "~") {
+                    return (~num)
+                }
+                if (angle == "d") {
+                    if (fun == "sin") {
+                        return (sin(degressToRadians(num)))
+                    }
+                    if (fun == "cos") {
+                        return (cos(degressToRadians(num)))
+                    }
+                    if (fun == "tan") {
+                        return (tan(degressToRadians(num)))
+                    }
+                    if (fun == "arcsin" && abs(num) <= 1) {
+                        return (radiansToDegress(asin(num)))
+                    }
+                    if (fun == "arccos" && abs(num) <= 1) {
+                        return (radiansToDegress(acos(num)))
+                    }
+                    if (fun == "arctan") {
+                        return (radiansToDegress(atan(num)))
+                    }
+                } else {
+                    if (fun == "sin") {
+                        return (sin(num))
+                    }
+                    if (fun == "cos") {
+                        return (cos(num))
+                    }
+                    if (fun == "tan") {
+                        return (tan(num))
+                    }
+                    if (fun == "arcsin" && abs(num) <= 1) {
+                        return (asin(num))
+                    }
+                    if (fun == "arccos" && abs(num) <= 1) {
+                        return (acos(num))
+                    }
+                    if (fun == "arctan") {
+                        return (atan(num))
+                    }
+                }
+                if (fun == "hypsin") {
+                    return ((exp(num) - exp(0 - num)) * 0.5)
+                }
+                if (fun == "hypcos") {
+                    return ((exp(num) + exp(-num)) * 0.5)
+                }
+                if (fun == "hyptan") {
+                    return ((exp(num) - exp(-num)) / (exp(num) + exp(-num)))
+                }
+                if (fun == "ahypsin" | fun == "hypcos" | fun == "hyptan") {
+                    alert("\u5bf9\u4e0d\u8d77,\u516c\u5f0f\u8fd8\u6ca1\u6709\u67e5\u5230!");
+                    return (num)
+                }
+                alert("\u8d85\u51fa\u51fd\u6570\u5b9a\u4e49\u8303\u56f4");
+                return (num)
+            }
+        }
+
+        function factorial(b) {
+            b = Math.abs(parseInt(b));
+            var a = 1;
+            for (; b > 0; b -= 1) {
+                a *= b
+            }
+            return (a)
+        }
+
+        function dms(n) {
+            var neg = (n < 0);
+            with(Math) {
+                n = abs(n);
+                var d = floor(n);
+                var m = floor(60 * (n - d));
+                var s = (n - d) * 60 - m
+            }
+            var dms = d + m / 100 + s * 0.006;
+            if (neg) {
+                dms = -dms
+            }
+            return (dms)
+        }
+
+        function deg(n) {
+            var neg = (n < 0);
+            with(Math) {
+                n = abs(n);
+                var d = floor(n);
+                var m = floor((n - d) * 100);
+                var s = (n - d) * 100 - m
+            }
+            var deg = d + m / 60 + s / 36;
+            if (neg) {
+                deg = -deg
+            }
+            return (deg)
+        }
+
+        function degressToRadians(a) {
+            return (a * Math.PI / 180)
+        }
+
+        function radiansToDegress(a) {
+            return (a * 180 / Math.PI)
+        }
+        var data = {
+            left: "",
+            sign: "",
+            right: "",
+            result: ""
+        };
+        var current = false;
+        var m = "";
+        var lastIsMemory = false;
+        var isMaxLength = false;
+        var c_get = function(a) {
+            return document.getElementById(a)
+        };
+        var c_getByName = function(b, e, f) {
+            var a = "";
+            if (!b) {
+                a = document.getElementsByTagName(e)
+            } else {
+                a = c_get(b).getElementsByTagName(e)
+            }
+            if (f) {
+                var c = [];
+                for (var d = 0; d < a.length; d++) {
+                    if (a[d].nodeName == f) {
+                        c.push(a[d])
+                    }
+                }
+                return c
+            }
+            return a
+        };
+        var calculator = {
+            arith: function(a) {
+                if (parseFloat(data.sign) != -2) {
+                    switch (parseFloat(data.sign)) {
+                        case 0:
+                            data.result = FloatAdd(parseFloat(data.left), parseFloat(data.right));
+                            break;
+                        case 1:
+                            data.result = FloatSub(parseFloat(data.left), parseFloat(data.right));
+                            break;
+                        case 2:
+                            data.result = FloatMul(parseFloat(data.left), parseFloat(data.right));
+                            break;
+                        case 3:
+                            data.result = FloatDiv(parseFloat(data.left), parseFloat(data.right));
+                            break
+                    }
+                    data.left = "";
+                    data.sign = a;
+                    data.right = "";
+                    current = false;
+                    c_get("resultIpt").value = data.result
+                }
+            },
+            foo: function(a) {
+                if (!lastIsMemory) {
+                    if (data.left == "") {
+                        if (data.result != "") {
+                            data.left = data.result;
+                            current = true
+                        } else {
+                            return false
+                        }
+                    } else {
+                        if (data.right == "") {
+                            current = true
+                        } else {
+                            calculator.arith(a);
+                            data.left = data.result;
+                            data.sign = a;
+                            data.right = "";
+                            current = true
+                        }
+                    }
+                } else {
+                    if (data.left != "" && data.right != "") {
+                        calculator.arith(a);
+                        data.left = data.result;
+                        data.sign = a;
+                        data.right = "";
+                        current = true
+                    } else {
+                        data.left = m;
+                        current = true
+                    }
+                    lastIsMemory = false
+                }
+                data.sign = a
+            },
+            input: function(a, b) {
+                if (b != -2) {
+                    if (data.sign.toString() == "-2") {
+                        $c_get("baseEprsPanel").innerHTML = a.innerHTML
+                    } else {
+                        if (!lastIsMemory) {
+                            $c_get("baseEprsPanel").innerHTML += a.innerHTML
+                        } else {
+                            $c_get("baseEprsPanel").innerHTML = a.innerHTML
+                        }
+                    }
+                }
+                switch (b) {
+                    case -1:
+                        if (isMaxLength == false) {
+                            if (c_get("resultIpt").value.substring(0, 1) == "0" && a.innerHTML == "0" && c_get("resultIpt").value.length <= 1) {} else {
+                                if (!lastIsMemory) {
+                                    if (current) {
+                                        if ((data.right.toString().indexOf(".") != -1 && a.value == ".")) {
+                                            return false
+                                        } else {
+                                            if (a.value == "." && (data.right == "" || data.right == "0")) {
+                                                data.right = "0" + a.value
+                                            } else {
+                                                if (data.right.toString().length <= 1 && data.right == "0") {
+                                                    data.right = a.innerHTML
+                                                } else {
+                                                    data.right += a.innerHTML
+                                                }
+                                            }
+                                            c_get("resultIpt").value = data.right
+                                        }
+                                    } else {
+                                        if ((data.left.toString().indexOf(".") != -1 && a.value == ".")) {
+                                            return false
+                                        } else {
+                                            if (a.value == "." && (data.left == "" || data.left == "0")) {
+                                                data.left = "0" + a.value
+                                            } else {
+                                                if (data.left.toString().length <= 1 && data.left == "0") {
+                                                    data.left = a.innerHTML
+                                                } else {
+                                                    data.left += a.innerHTML
+                                                }
+                                            }
+                                            c_get("resultIpt").value = data.left
+                                        }
+                                    }
+                                } else {
+                                    current = false;
+                                    data.left = a.innerHTML;
+                                    c_get("resultIpt").value = data.left;
+                                    lastIsMemory = false
+                                }
+                                if (data.sign.toString() == "-2") {
+                                    data.sign = ""
+                                }
+                                if (c_get("resultIpt").value.length > 16) {
+                                    isMaxLength = true
+                                }
+                            }
+                        } else {
+                            alert("\u53ea\u80fd\u8f93\u5165\u4e0d\u5927\u4e8e17\u4f4d\u7684\u5b57\u7b26")
+                        }
+                        break;
+                    case -2:
+                        if (data.left != "" && data.right != "") {
+                            calculator.arith(-2)
+                        } else {
+                            if (data.result != "" && data.sign != "" && parseFloat(data.sign) != -2) {
+                                data.right = data.left;
+                                data.left = data.result;
+                                calculator.arith(-2)
+                            }
+                        }
+                        isMaxLength = false;
+                        break;
+                    case -3:
+                        if (c_get("resultIpt").value.substring(0, 1) == "-") {
+                            c_get("resultIpt").value = c_get("resultIpt").value.substr(1)
+                        } else {
+                            c_get("resultIpt").value = "-" + c_get("resultIpt").value
+                        }
+                        if (current == false) {
+                            if (data.left == "") {
+                                if (data.result != "") {
+                                    data.left = data.result;
+                                    data.left = -Number(data.left)
+                                }
+                            } else {
+                                data.left = c_get("resultIpt").value
+                            }
+                        } else {
+                            data.right = c_get("resultIpt").value
+                        }
+                        break;
+                    case 0:
+                        calculator.foo(0);
+                        isMaxLength = false;
+                        break;
+                    case 1:
+                        calculator.foo(1);
+                        isMaxLength = false;
+                        break;
+                    case 2:
+                        calculator.foo(2);
+                        isMaxLength = false;
+                        break;
+                    case 3:
+                        calculator.foo(3);
+                        isMaxLength = false;
+                        break
+                }
+                a.blur()
+            },
+            output: function(a, c, b) {
+                if (b) {
+                    a.innerHTML += c
+                } else {
+                    a.innerHTML = c
+                }
+            },
+            remove: function() {
+                if (current == false) {
+                    if (data.left.length > 0) {
+                        data.left = data.left.substring(0, data.left.length - 1);
+                        c_get("resultIpt").value = data.left
+                    }
+                } else {
+                    if (data.right.length > 0) {
+                        data.right = data.right.substring(0, data.right.length - 1);
+                        c_get("resultIpt").value = data.right
+                    }
+                }
+                try {
+                    c_get("baseEprsPanel").innerHTML = c_get("baseEprsPanel").innerHTML.substring(0, c_get("baseEprsPanel").innerHTML.length - 1)
+                } catch (a) {}
+                c_get("simpleDel").blur();
+                if (c_get("resultIpt").value.length <= 16) {
+                    isMaxLength = false
+                }
+            },
+            clearAll: function() {
+                c_get("resultIpt").value = 0;
+                current = false;
+                data.left = data.right = data.result = "";
+                c_get("baseEprsPanel").innerHTML = "";
+                c_get("simpleClearAllBtn").blur();
+                isMaxLength = false
+            },
+            memory: function(b, a) {
+                switch (a) {
+                    case 0:
+                        if (c_get("resultIpt").value != "") {
+                            m = parseFloat(c_get("resultIpt").value)
+                        }
+                        lastIsMemory = true;
+                        break;
+                    case 1:
+                        if (m != "") {
+                            if (parseFloat(data.sign) != -2 && data.sign.toString() != "") {
+                                if (current) {
+                                    data.right = m
+                                } else {
+                                    data.left = m
+                                }
+                                c_get("baseEprsPanel").innerHTML += m
+                            }
+                            c_get("resultIpt").value = m
+                        }
+                        lastIsMemory = true;
+                        break;
+                    case 2:
+                        m = "";
+                        break;
+                    case -1:
+                        if (m == "") {
+                            if (c_get("resultIpt").value != "") {
+                                m = parseFloat(c_get("resultIpt").value)
+                            }
+                        } else {
+                            if (c_get("resultIpt").value != "") {
+                                m = parseFloat(m) + parseFloat(c_get("resultIpt").value)
+                            }
+                        }
+                        lastIsMemory = true;
+                        break;
+                    case -2:
+                        if (m == "") {
+                            if (c_get("resultIpt").value != "") {
+                                m = parseFloat(c_get("resultIpt").value)
+                            }
+                        } else {
+                            if (c_get("resultIpt").value != "") {
+                                m = parseFloat(m) * parseFloat(c_get("resultIpt").value)
+                            }
+                        }
+                        lastIsMemory = true;
+                        break
+                }
+                b.blur()
+            }
+        };
+        var byKeyBoard = function(d, e) {
+            var a = function(f) {
+                return document.getElementById(f)
+            };
+            var c = Number(d);
+            var b = "simple";
+            if (c_get("calculator_base").style.display == "none") {
+                b = "complete"
+            }
+            if (c == 48 || c == 96) {
+                a(b + "0").click();
+                return false
+            }
+            if (c == 49 || c == 97) {
+                a(b + "1").click();
+                return false
+            }
+            if (c == 50 || c == 98) {
+                a(b + "2").click();
+                return false
+            }
+            if (c == 51 || c == 99) {
+                a(b + "3").click();
+                return false
+            }
+            if (c == 52 || c == 100) {
+                a(b + "4").click();
+                return false
+            }
+            if (c == 53 || c == 101) {
+                a(b + "5").click();
+                return false
+            }
+            if (c == 54 || c == 102) {
+                a(b + "6").click();
+                return false
+            }
+            if (c == 55 || c == 103) {
+                a(b + "7").click();
+                return false
+            }
+            if (c == 56 || c == 104) {
+                a(b + "8").click();
+                return false
+            }
+            if (c == 57 || c == 105) {
+                a(b + "9").click();
+                return false
+            }
+            if (c == 13 || c == 187) {
+                a(b + "Equal").click();
+                return false
+            }
+            if (c == 190 || c == 110) {
+                a(b + "Dot").click();
+                return false
+            }
+            if (c == 109 || c == 189) {
+                a(b + "Subtr").click();
+                return false
+            }
+            switch (d) {
+                case 107:
+                    a(b + "Add").click();
+                    break;
+                case 109:
+                    a(b + "Subtr").click();
+                    break;
+                case 189:
+                    a(b + "Subtr").click();
+                    break;
+                case 106:
+                    a(b + "Multi").click();
+                    break;
+                case 111:
+                    a(b + "Divi").click();
+                    break;
+                case 46:
+                    a(b + "Del").click();
+                    break
+            }
+        };
+
+        function jisuanqi_run() {
+            document.onkeydown = function(a) {
+                var c = a || window.event;
+                var b = c.keyCode;
+                byKeyBoard(b, c)
+            };
+            inputChangCarry(10)
+        };
+    </script>
+    <style>
+        input[type="button" i] {
+            -webkit-appearance: push-button;
+            user-select: none;
+            white-space: pre;
+            align-items: flex-start;
+            text-align: center;
+            cursor: default;
+            color: buttontext;
+            background-color: buttonface;
+            box-sizing: border-box;
+            padding: 1px 6px;
+            border-width: 2px;
+            border-color: buttonface;
+            border-image: initial;
+        }
+
+        .up-name {
+            width: 30%;
+            height: 2rem;
+            line-height: 2rem;
+            font-size: 1.3rem;
+            /*margin: 1.2rem auto 0rem;*/
+            border-radius: 0.5rem;
+            background-color: #ff5d25;
+            color: #ffffff;
+            text-align: center;
+            float: left;
+        }
+        body {
+            background-color: #f6f6f6;
+        }
+
+        .w5 {
+            width: 5rem;
+        }
+
+        .w6 {
+            width: 6rem;
+        }
+
+        .w14 {
+            width: 14rem;
+        }
+
+        .ml05 {
+            margin-left: 0.5rem;
+        }
+
+        .mr05 {
+            margin-right: 0.5em;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3rem;
+            background-color: #ff5d25;
+            z-index: 99;
+        }
+
+        .header .back, .header .head-tit {
+            float: left;
+        }
+
+        .header .back {
+            /*width: 2rem;*/
+            height: 1.5rem;
+            margin: 0.5rem 1.5rem;
+        }
+
+        .header .back img {
+            height: 2rem;
+        }
+
+        .header .head-tit {
+            width: 72%;
+            line-height: 3rem;
+            text-align: center;
+            font-size: 1.3rem;
+            color: #ffffff;
+        }
+
+        .header .home {
+            position: absolute;
+            height: 1.5rem;
+            top: 0.5rem;
+            right: 1.5rem;
+        }
+
+        .header .home img {
+            height: 2rem;
+        }
+
+
+        .wrap {
+            margin-top: 1rem;
+            padding: 2px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .wrap .nav {
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .wrap .nav .nav-list {
+            display: inline-block;
+            width: 48%;
+            margin-bottom: 1rem;
+            color: #9d928e;
+            background-color: #fff1ec;
+            border: 1px solid #ff561c;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .wrap .nav .nav-list .nva-list-content {
+            border: 1px solid #ff561c;
+            width: 99%;
+            border-radius: 0.5rem;
+            line-height: 3rem;
+            /*text-indent: 2em;*/
+            font-size: 1.25rem;
+            color: #9d928e;
+            background-color: #fff1ec;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .wrap .nav .nav-list b {
+            font-size: 1.2rem;
+            color: #ff561c;
+            line-height: 3rem;
+        }
+
+
+        .wrap .nav .nav-content {
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 1rem;
+            color: #9d928e;
+            background-color: #fff1ec;
+            /*border: 1px solid #ff561c;*/
+            border-radius: 0.5rem;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .wrap .nav .nav-content .nva-list-content {
+            border: 1px solid #ff561c;
+            width: 99%;
+            border-radius: 0.5rem;
+            line-height: 3rem;
+            /*text-indent: 2em;*/
+            font-size: 1.25rem;
+            color: #9d928e;
+            background-color: #fff1ec;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .wrap .nav .nav-content b {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ff561c;
+            line-height: 3rem;
+        }
+
+        .wrap .nav .nav-content strong {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ff561c;
+            line-height: 3rem;
+        }
+
+        .wrap .nav .nav-content-item {
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 1rem;
+            color: #9d928e;
+            background-color: #fff1ec;
+            border: 1px solid #ff561c;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .wrap .nav .nav-content-item .content {
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 1rem;
+            color: #9d928e;
+            background-color: #fff1ec;
+            /*border: 1px solid #ff561c;*/
+            border-radius: 0.5rem;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .wrap .nav .nav-content-item .content .input {
+            width: 50%;
+            float: left;
+        }
+
+        .wrap .nav .nav-content-item .content .left {
+            width: 27%;
+            /*border:1px solid red;*/
+            text-align: right;
+            float: left;
+            box-sizing: border-box;
+            font-size: 12px;
+            /*margin-right: 10px;*/
+        }
+
+        .wrap .nav .nav-content-item .content .right {
+            width: 36px;
+            /*border:1px solid red;*/
+            text-align: left;
+            float: left;
+            box-sizing: border-box;
+            /*margin-left: 10px;*/
+        }
+
+        .wrap .nav .nav-content-item .content .right_r {
+            width: 60px;
+            /*border:1px solid red;*/
+            text-align: left;
+            float: left;
+            box-sizing: border-box;
+            /*margin-left: 10px;*/
+        }
+
+        .wrap .nav .nav-content-item .content .middle {
+            width: 58%;
+            /*border:1px solid red;*/
+            text-align: left;
+            float: left;
+            box-sizing: border-box;
+            margin-left: 10px;
+            padding: 2px;
+        }
+
+        .wrap .nav .nav-content-item .content .middle_r {
+            width: 70%;
+            /*border: 1px solid red;*/
+            text-align: left;
+            float: left;
+            box-sizing: border-box;
+            margin-left: 10px;
+            padding: 2px;
+        }
+
+        .wrap .nav .nav-content-item .content .middle_s {
+            width: 54%;
+            /*border: 1px solid red;*/
+            text-align: left;
+            float: left;
+            box-sizing: border-box;
+            margin-left: 10px;
+            padding: 2px;
+        }
+
+        .wrap .nav .nav-content-item .title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #ff561c;
+            line-height: 3rem;
+        }
+
+        .line {
+            width: 99%;
+            /*height: 1px;*/
+            margin: 5px auto;
+            border: 1px solid #ff561c;
+        }
+
+        html, body, div, span, applet, object, iframe,
+        h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+        a, abbr, acronym, address, big, cite, code,
+        del, dfn, em, img, ins, kbd, q, s, samp,
+        small, strike, strong, sub, sup, tt, var,
+        b, u, i, center,
+        dl, dt, dd, ol, ul, li,
+        fieldset, form, label, legend,
+        table, caption, tbody, tfoot, thead, tr, th, td,
+        article, aside, canvas, details, embed,
+        figure, figcaption, footer, header,
+        menu, nav, output, ruby, section, summary,
+        time, mark, audio, video, input {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            /*font-size: 62.5%;!*10 ÷ 16 × 100% = 62.5%*!;*/
+            /*font-size: 75%;*/
+            font-size: 12px;
+            /*在根元素<html>中定义了一个基本字体大小为62.5%（也就是10px。设置这个值主要方便计算：1.2rem即 12px ，1.6rem即16px。如果没有设置，将是以浏览器默认的“16px”为基准*/
+            /*浏览器最小只能支持12px，不能再小了*/
+            font-weight: normal;
+            vertical-align: baseline;
+        }
+
+        /*html,body{*/
+        /*font-size: 75%;*/
+        /*}*/
+
+        /* HTML5 display-role reset for older browsers */
+        article, aside, details, figcaption, figure,
+        footer, header, menu, nav, section {
+            display: block;
+        }
+
+        body {
+            line-height: 1;
+        }
+        div {
+            box-sizing: border-box;
+        }
+
+        blockquote, q {
+            quotes: none;
+        }
+
+        blockquote:before, blockquote:after,
+        q:before, q:after {
+            content: none;
+        }
+
+        table {
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        /* custom */
+        a {
+            color: #7e8c8d;
+            text-decoration: none;
+            -webkit-backface-visibility: hidden;
+        }
+        img {
+            border: none;
+        }
+
+        li {
+            list-style: none;
+        }
+        i,em {
+            font-style: normal
+        }
+        select:focus {
+            outline: none
+        }
+
+        input:focus {
+            outline: none
+        }
+        input::-webkit-input-placeholder, textarea::-webkit-input-placeholder {
+            color: #b6b6b6;
+            font-size: 1rem;
+        }
+
+        input:-moz-placeholder, textarea:-moz-placeholder {
+            color: #b6b6b6;
+            font-size: 1rem;
+        }
+
+        input::-moz-placeholder, textarea::-moz-placeholder {
+            color: #b6b6b6;
+            font-size: 1rem;
+        }
+
+        input:-ms-input-placeholder, textarea:-ms-input-placeholder {
+            color: #b6b6b6;
+            font-size: 1rem;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track-piece {
+            background-color: rgba(0, 0, 0, 0.2);
+            -webkit-border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:vertical {
+            height: 5px;
+            background-color: rgba(125, 125, 125, 0.7);
+            -webkit-border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:horizontal {
+            width: 5px;
+            background-color: rgba(125, 125, 125, 0.7);
+            -webkit-border-radius: 6px;
+        }
+
+        html, body {
+            width: 100%;
+        }
+
+        body {
+            -webkit-text-size-adjust: none;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        }
+
+        .clearfix:after {
+            content: "";
+            display: block;
+            visibility: hidden;
+            height: 0;
+            clear: both;
+        }
+
+        .clearfix {
+            zoom: 1;
+        }
+
+
+        #jisuan {
+            margin: 0 auto;
+            color: #666;
+            font: 1.11111rem/1.5 Microsoft Yahei,sans-serif;
+            text-align: center
+        }
+
+        #jisuan a {
+            text-decoration: none
+        }
+
+        #jisuan ul {
+            margin: 0;
+            padding: 0
+        }
+
+        .fontArial {
+            font-family: 'Arial' !important
+        }
+
+        .main {
+            padding: 1.22222rem .83333rem .83333rem .77778rem;
+            margin-bottom: 1.11111rem
+        }
+
+        .calculator_con {
+            border: #bfbfbf solid 1px;
+            -webkit-border-radius: .33333rem;
+            -moz-border-radius: .33333rem;
+            border-radius: .33333rem;
+            padding: 1.11111rem .61111rem .66667rem;
+            background: -webkit-linear-gradient(133deg,#bababa,#d7d7d7 50%,#e6e6e6 50%,#fff);
+            background: -moz-linear-gradient(133deg,#bababa,#d7d7d7 50%,#e6e6e6 50%,#fff);
+            background: -ms-linear-gradient(133deg,#bababa,#d7d7d7 50%,#e6e6e6 50%,#fff);
+            background: -o-linear-gradient(133deg,#bababa,#d7d7d7 50%,#e6e6e6 50%,#fff);
+            -moz-box-shadow: 0 -4px 0 rgba(0,0,0,0.2) inset;
+            -webkit-box-shadow: 0 -4px 0 rgba(0,0,0,0.2) inset;
+            box-shadow: 0 -4px 0 rgba(0,0,0,0.2) inset;
+            display: none
+        }
+
+        .calculator_con.current {
+            display: block
+        }
+
+        .calculator_hd {
+            border: #c3c5c7 solid 1px;
+            -webkit-border-radius: .33333rem;
+            -moz-border-radius: .33333rem;
+            border-radius: .33333rem;
+            -moz-box-shadow: 0 2px 3px rgba(0,0,0,0.37) inset,0 1px 1px rgba(0,0,0,0.13);
+            -webkit-box-shadow: 0 2px 3px rgba(0,0,0,0.37) inset,0 1px 1px rgba(0,0,0,0.13);
+            box-shadow: 0 2px 3px rgba(0,0,0,0.37) inset,0 1px 1px rgba(0,0,0,0.13);
+            background: #fcfdea;
+            padding: .5rem
+        }
+
+        .calculator_hd .resultIpt {
+            height: 3.44444rem;
+            width: 100%;
+            border: 0;
+            -webkit-appearance: none;
+            font-size: 2.88889rem;
+            color: #333;
+            text-align: right;
+            background: 0
+        }
+
+        .calculator_bd {
+            margin-top: 1.11111rem
+        }
+
+        .calculator_table li, .complete_more li, .complete_table_rdo li {
+            display: -webkit-box;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex
+        }
+
+        .cal_btn {
+            border: #898a8c solid 1px;
+            -webkit-border-radius: .33333rem;
+            -moz-border-radius: .33333rem;
+            border-radius: .33333rem;
+            height: 2.77778rem;
+            width: 23.25581%;
+            margin-right: 2.09302%;
+            -webkit-box-flex: 1;
+            -moz-box-flex: 1;
+            -webkit-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+            width: 0;
+            display: block;
+            margin-bottom: 1.16667rem;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            line-height: 2.77778rem;
+            font-size: 1.33333rem;
+            -moz-box-shadow: 0 1px 2px white inset,0 1px 1px rgba(0,0,0,0.2);
+            -webkit-box-shadow: 0 1px 2px white inset,0 1px 1px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 2px white inset,0 1px 1px rgba(0,0,0,0.2);
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#e9e9ea),to(#d5d7dc));
+            background-image: -webkit-linear-gradient(top,#e9e9ea,#d5d7dc);
+            background-image: -moz-linear-gradient(top,#e9e9ea,#d5d7dc);
+            background-image: -ms-linear-gradient(top,#e9e9ea,#d5d7dc);
+            background-image: -o-linear-gradient(top,#e9e9ea,#d5d7dc);
+            background-image: linear-gradient(top,#e9e9ea,#d5d7dc);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FFE9E9EA",EndColorStr="#FFD5D7DC");
+            color: #666
+        }
+
+        .cal_btn:link {
+            color: #666
+        }
+
+        .cal_btn:visited {
+            color: #666
+        }
+
+        .cal_btn:active {
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#d5d7dc),to(#e9e9ea));
+            background-image: -webkit-linear-gradient(top,#d5d7dc,#e9e9ea);
+            background-image: -moz-linear-gradient(top,#d5d7dc,#e9e9ea);
+            background-image: -ms-linear-gradient(top,#d5d7dc,#e9e9ea);
+            background-image: -o-linear-gradient(top,#d5d7dc,#e9e9ea);
+            background-image: linear-gradient(top,#d5d7dc,#e9e9ea);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FFD5D7DC",EndColorStr="#FFE9E9EA")
+        }
+
+        .cal_btn:nth-child(4n) {
+            margin-right: 0
+        }
+
+        .cla_btn_org {
+            border-color: #b14610;
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#dd834c),to(#ba5913));
+            background-image: -webkit-linear-gradient(top,#dd834c,#ba5913);
+            background-image: -moz-linear-gradient(top,#dd834c,#ba5913);
+            background-image: -ms-linear-gradient(top,#dd834c,#ba5913);
+            background-image: -o-linear-gradient(top,#dd834c,#ba5913);
+            background-image: linear-gradient(top,#dd834c,#ba5913);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FFDD834C",EndColorStr="#FFBA5913");
+            color: #fff
+        }
+
+        .cla_btn_org:link {
+            color: #fff
+        }
+
+        .cla_btn_org:visited {
+            color: #fff
+        }
+
+        .cla_btn_org:hover {
+            color: #fff
+        }
+
+        .cla_btn_org:active {
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#ba5913),to(#dd834c));
+            background-image: -webkit-linear-gradient(top,#ba5913,#dd834c);
+            background-image: -moz-linear-gradient(top,#ba5913,#dd834c);
+            background-image: -ms-linear-gradient(top,#ba5913,#dd834c);
+            background-image: -o-linear-gradient(top,#ba5913,#dd834c);
+            background-image: linear-gradient(top,#ba5913,#dd834c);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FFBA5913",EndColorStr="#FFDD834C")
+        }
+
+        .cal_btn_gray {
+            border-color: #62422f;
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#7c654f),to(#68533d));
+            background-image: -webkit-linear-gradient(top,#7c654f,#68533d);
+            background-image: -moz-linear-gradient(top,#7c654f,#68533d);
+            background-image: -ms-linear-gradient(top,#7c654f,#68533d);
+            background-image: -o-linear-gradient(top,#7c654f,#68533d);
+            background-image: linear-gradient(top,#7c654f,#68533d);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FF7C654F",EndColorStr="#FF68533D");
+            color: #fff
+        }
+
+        .cal_btn_gray:link {
+            color: #fff
+        }
+
+        .cal_btn_gray:visited {
+            color: #fff
+        }
+
+        .cal_btn_gray:hover {
+            color: #fff
+        }
+
+        .cal_btn_gray:active {
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#68533d),to(#7c654f));
+            background-image: -webkit-linear-gradient(top,#68533d,#7c654f);
+            background-image: -moz-linear-gradient(top,#68533d,#7c654f);
+            background-image: -ms-linear-gradient(top,#68533d,#7c654f);
+            background-image: -o-linear-gradient(top,#68533d,#7c654f);
+            background-image: linear-gradient(top,#68533d,#7c654f);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FF68533D",EndColorStr="#FF7C654F")
+        }
+
+        .cal_btn_bla {
+            border-color: #2b2b2b;
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#4e4e4e),to(#2d2d2d));
+            background-image: -webkit-linear-gradient(top,#4e4e4e,#2d2d2d);
+            background-image: -moz-linear-gradient(top,#4e4e4e,#2d2d2d);
+            background-image: -ms-linear-gradient(top,#4e4e4e,#2d2d2d);
+            background-image: -o-linear-gradient(top,#4e4e4e,#2d2d2d);
+            background-image: linear-gradient(top,#4e4e4e,#2d2d2d);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FF4E4E4E",EndColorStr="#FF2D2D2D");
+            color: #fff
+        }
+
+        .cal_btn_bla:link {
+            color: #fff
+        }
+
+        .cal_btn_bla:visited {
+            color: #fff
+        }
+
+        .cal_btn_bla:hover {
+            color: #fff
+        }
+
+        .cal_btn_bla:active {
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#2d2d2d),to(#4e4e4e));
+            background-image: -webkit-linear-gradient(top,#2d2d2d,#4e4e4e);
+            background-image: -moz-linear-gradient(top,#2d2d2d,#4e4e4e);
+            background-image: -ms-linear-gradient(top,#2d2d2d,#4e4e4e);
+            background-image: -o-linear-gradient(top,#2d2d2d,#4e4e4e);
+            background-image: linear-gradient(top,#2d2d2d,#4e4e4e);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FF2D2D2D",EndColorStr="#FF4E4E4E")
+        }
+
+        .cal_btn_gre {
+            border-color: #57636f;
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#969da2),to(#777f85));
+            background-image: -webkit-linear-gradient(top,#969da2,#777f85);
+            background-image: -moz-linear-gradient(top,#969da2,#777f85);
+            background-image: -ms-linear-gradient(top,#969da2,#777f85);
+            background-image: -o-linear-gradient(top,#969da2,#777f85);
+            background-image: linear-gradient(top,#969da2,#777f85);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FF969DA2",EndColorStr="#FF777F85");
+            color: #fff
+        }
+
+        .cal_btn_gre:link {
+            color: #fff
+        }
+
+        .cal_btn_gre:visited {
+            color: #fff
+        }
+
+        .cal_btn_gre:hover {
+            color: #fff
+        }
+
+        .cal_btn_gre:active {
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#777f85),to(#969da2));
+            background-image: -webkit-linear-gradient(top,#777f85,#969da2);
+            background-image: -moz-linear-gradient(top,#777f85,#969da2);
+            background-image: -ms-linear-gradient(top,#777f85,#969da2);
+            background-image: -o-linear-gradient(top,#777f85,#969da2);
+            background-image: linear-gradient(top,#777f85,#969da2);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FF777F85",EndColorStr="#FF969DA2")
+        }
+
+        .cal_btn_dis {
+            background: linear-gradient(#e9e9ea,#fff,#d5d7dc);
+            color: #999
+        }
+
+        .cal_btn_dis:link {
+            color: #999
+        }
+
+        .cal_btn_dis:visited {
+            color: #999
+        }
+
+        .cal_btn_dis:hover {
+            color: #999
+        }
+
+        .complete_table_rdo {
+            width: 100%;
+            font-size: .77778rem
+        }
+
+        .complete_table_rdo input, .complete_table_rdo label {
+            cursor: pointer;
+            white-space: nowrap
+        }
+
+        .complete_table_rdo input[type='radio'] {
+            width: .88889rem;
+            height: .88889rem;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            position: relative;
+            border: #898a8c solid 1px;
+            -webkit-border-radius: .44444rem;
+            -moz-border-radius: .44444rem;
+            border-radius: .44444rem;
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#dadada),to(#fff));
+            background-image: -webkit-linear-gradient(top,#dadada,#fff);
+            background-image: -moz-linear-gradient(top,#dadada,#fff);
+            background-image: -ms-linear-gradient(top,#dadada,#fff);
+            background-image: -o-linear-gradient(top,#dadada,#fff);
+            background-image: linear-gradient(top,#dadada,#fff);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FFDADADA",EndColorStr="#FFFFFFFF")
+        }
+
+        .complete_table_rdo input[type='radio']:checked {
+            border: #898a8c solid 1px
+        }
+
+        .complete_table_rdo input[type='radio']:checked::before {
+            content: '';
+            display: inline-block;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            margin-left: -0.16667rem;
+            margin-top: -0.16667rem;
+            width: .33333rem;
+            height: .33333rem;
+            -webkit-border-radius: .16667rem;
+            -moz-border-radius: .16667rem;
+            border-radius: .16667rem;
+            background: #8c8d8f
+        }
+
+        .complete_table_rdo .ipts {
+            width: 35.363%;
+            font-size: 0
+        }
+
+        .complete_table_rdo .chk_text_inp {
+            height: 2.83333rem;
+            border: #898a8c solid 1px;
+            -webkit-border-radius: .33333rem;
+            -moz-border-radius: .33333rem;
+            border-radius: .33333rem;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+            zoom: 1;
+            background-image: -webkit-gradient(linear,left top,left bottom,from(#dadada),to(#fff));
+            background-image: -webkit-linear-gradient(top,#dadada,#fff);
+            background-image: -moz-linear-gradient(top,#dadada,#fff);
+            background-image: -ms-linear-gradient(top,#dadada,#fff);
+            background-image: -o-linear-gradient(top,#dadada,#fff);
+            background-image: linear-gradient(top,#dadada,#fff);
+            filter: progid: DXImageTransform.Microsoft.gradient(startColorStr="#FFDADADA",EndColorStr="#FFFFFFFF");
+            -webkit-apparence: none;
+            text-align: center;
+            width: 32.45033%
+        }
+
+        .complete_table_rdo .chk_text_inp:nth-child(3n-1) {
+            margin: 0 1.3245%
+        }
+
+        .complete_table_rdo li {
+            margin-bottom: 1rem
+        }
+
+        .complete_table_rdo .cal_btn {
+            margin: 0 0 0 2.57611%;
+            display: block;
+            -webkit-box-flex: none;
+            -moz-box-flex: none;
+            -webkit-flex: none;
+            -ms-flex: none;
+            flex: none;
+            width: 0;
+            display: block;
+            width: 14.51991%
+        }
+
+        .complete_table_rdo .labinp:nth-child(7n-2) {
+            width: 9.36768%
+        }
+
+        .complete_table_main li {
+            display: -webkit-box;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex
+        }
+
+        .complete_table_main .cal_btn {
+            -webkit-box-flex: 1;
+            -moz-box-flex: 1;
+            -webkit-flex: 1;
+            -ms-flex: 1;
+            flex: 1;
+            width: 0;
+            display: block;
+            width: 14.51991%;
+            margin-right: 2.57611%
+        }
+
+        .complete_table_main .cal_btn:nth-child(6n) {
+            margin-right: 0
+        }
+
+        .complete_more {
+            font-size: 0;
+            padding: .61111rem;
+            background: #f4f4f4;
+            -webkit-border-radius: .33333rem;
+            -moz-border-radius: .33333rem;
+            border-radius: .33333rem
+        }
+
+        .complete_more .cal_btn {
+            width: 17.73399%;
+            margin-right: 2.70936%
+        }
+
+        .complete_more .cal_btn:nth-child(5n) {
+            margin-right: 0
+        }
+
+        .complete_more a {
+            font-family: 'Arial' !important
+        }
+
+        .complete_more li:last-child a {
+            margin-bottom: 0
+        }
+
+        .labinp {
+            width: 15.11628%;
+            text-align: center
+        }
+
+        .labinp label {
+            display: block;
+            text-align: center
+        }
+
+        .quickLnk {
+            padding-left: 1.55556rem;
+            border-top: #dadada solid 1px
+        }
+
+@media only screen {
+            html {
+                font-size: 12px
+            }
+        }
+
+@media only screen and (min-width:360px) and (max-width:399px) {
+            html {
+                font-size: 13px
+            }
+        }
+
+@media only screen and (min-width:400px) and (max-width:479px) {
+            html {
+                font-size: 15px
+            }
+        }
+
+@media only screen and (min-width:480px) {
+            html {
+                font-size: 18px
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="wrap" style="">
+        <!--<div style="width:100%;text-align:center;font-weight:bold;font-size:20px;height:50px;line-height:50px">在线科学计算器</div>
+                <div style="width:99;border:1px solid #ff5d25"></div>-->
+        <div class="qiehuankuang_1" id="btns" style="height:40px;">
+            <input type="button" value="普通计算器" style=" width: 30%;
+            height: 2rem;
+            line-height: 2rem;
+            font-size: 1.3rem;
+            border-radius: 0.5rem;
+            background-color: #ff5d25;
+            padding:2px;
+            margin:4px;
+            color: #ffffff;
+            text-align: center;
+            float:left;" class="btnss">
+            <input type="button" value="高级计算器" class="qiehuankuang_1_dq" style=" width: 30%;
+            height: 2rem;
+            line-height: 2rem;
+            font-size: 1.3rem;
+            padding:2px;
+            margin:4px;
+            border-radius: 0.5rem;
+            background-color: #ff5d25;
+            color: #ffffff;
+            text-align: center;
+            float:left;">
+        </div>
+
+        <div id="jisuan">
+            <div class="calculator_main" id="calculator">
+                <div class="calculator_con">
+                    <div id="calculator_base" style="display: block"></div>
+                    <div class="calculator_hd">
+                        <input type="text" id="resultIpt" readonly="" class="resultIpt" value="0" size="17" maxlength="17">
+                    </div>
+                    <div id="baseEprsPanel" valign="middle" width="290" style="display:none"></div>
+                    <div class="calculator_bd" id="calculator_bd">
+                        <ul class="calculator_table">
+                            <li>
+                                <a class="cal_btn" href="javascript:;" onclick="calculator.memory(this,0);">存储</a>
+                                <a class="cal_btn" href="javascript:;" onclick="calculator.memory(this,1);">取存</a>
+                                <a class="cal_btn cla_btn_org" href="javascript:;" id="simpleDel" onclick="calculator.remove();">退格</a>
+                                <a class="cal_btn cla_btn_org" href="javascript:;" id="simpleClearAllBtn" onclick="calculator.clearAll();">清屏</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn" href="javascript:;" onclick="calculator.memory(this,-1);">累存</a>
+                                <a class="cal_btn" href="javascript:;" onclick="calculator.memory(this,-2);">积存</a>
+                                <a class="cal_btn" href="javascript:;" onclick="calculator.memory(this,2);">清存</a>
+                                <a class="cal_btn cal_btn_gray fontArial" id="simpleDivi" href="javascript:;" onclick="calculator.input(this,3);">÷</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn fontArial" id="simple7" href="javascript:;" onclick="calculator.input(this,-1);">7</a>
+                                <a class="cal_btn fontArial" id="simple8" href="javascript:;" onclick="calculator.input(this,-1);">8</a>
+                                <a class="cal_btn fontArial" id="simple9" href="javascript:;" onclick="calculator.input(this,-1);">9</a>
+                                <a class="cal_btn cal_btn_gray fontArial" id="simpleMulti" href="javascript:;" onclick="calculator.input(this,2);">x</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn fontArial" href="javascript:;" id="simple4" onclick="calculator.input(this,-1);">4</a>
+                                <a class="cal_btn fontArial" href="javascript:;" id="simple5" onclick="calculator.input(this,-1);">5</a>
+                                <a class="cal_btn fontArial" href="javascript:;" id="simple6" onclick="calculator.input(this,-1);">6</a>
+                                <a class="cal_btn cal_btn_gray fontArial" href="javascript:;" id="simpleSubtr" onclick="calculator.input(this,1);">-</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn fontArial" href="javascript:;" id="simple1" onclick="calculator.input(this,-1);">1</a>
+                                <a class="cal_btn fontArial" href="javascript:;" id="simple2" onclick="calculator.input(this,-1);">2</a>
+                                <a class="cal_btn fontArial" href="javascript:;" id="simple3" onclick="calculator.input(this,-1);">3</a>
+                                <a class="cal_btn cal_btn_gray fontArial" href="javascript:;" id="simpleAdd" onclick="calculator.input(this,0);">+</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn fontArial" href="javascript:;" id="simple0" onclick="calculator.input(this,-1);">0</a>
+                                <a class="cal_btn fontArial" href="javascript:;" id="simpleDot" onclick="calculator.input(this,-1);">.</a>
+                                <a class="cal_btn fontArial" href="javascript:;" onclick="calculator.input(this,-3);">+/-</a>
+                                <a class="cal_btn cal_btn_bla fontArial" id="simpleEqual" href="javascript:;" onclick="calculator.input(this,-2);">=</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="calculator_con current">
+                    <div class="calculator_hd">
+                        <input type="text" class="resultIpt" id="gaoji" name="gaoji" value="0">
+                        <div id="completeEprsPanel" valign="middle" width="290" style="display:none"></div>
+                    </div>
+                    <div class="calculator_bd">
+                        <ul class="complete_table_rdo">
+                            <li>
+                                <div class="labinp">
+                                    <input type="radio" name="carry" onclick="inputChangCarry(16);" id="hex">
+                                    <label for="hex">十六进制</label>
+                                </div>
+                                <div class="labinp">
+                                    <input type="radio" name="carry" onclick="inputChangCarry(10);" id="decimal" checked="checked" display="block">
+                                    <label for="decimal">十进制</label>
+                                </div>
+                                <div class="labinp">
+                                    <input type="radio" name="carry" onclick="inputChangCarry(8);" id="octal">
+                                    <label for="octal">八进制</label>
+                                </div>
+                                <div class="labinp">
+                                    <input type="radio" name="carry" onclick="inputChangCarry(2);" id="binary">
+                                    <label for="binary">二进制</label>
+                                </div>
+                                <div class="labinp"></div>
+                                <div class="labinp">
+                                    <input type="radio" name="angle" onclick="inputChangAngle(&#39;d&#39;);">
+                                    <label for="angle">角度制</label>
+                                </div>
+                                <div class="labinp">
+                                    <input type="radio" name="angle" onclick="inputChangAngle(&#39;r&#39;);">
+                                    <label for="angle">弧度制</label>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="labinp">
+                                    <input type="checkbox" id="upperFile" onclick="inputshift();">
+                                    <label for="upperFile">上档功能</label>
+                                </div>
+                                <div class="labinp">
+                                    <input type="checkbox" id="hyperbolic" onclick="inputshift();">
+                                    <label for="hyperbolic">双曲函数</label>
+                                </div>
+                                <div class="ipts">
+                                    <input type="text" name="bracket" id="bracket" readonly="" size="3" class="chk_text_inp">
+                                    <input type="text" name="memory" id="memory" readonly="" size="3" class="chk_text_inp">
+                                    <input type="text" name="operator" id="operator" readonly="" size="3" class="chk_text_inp">
+                                </div>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="completeDel" onclick="backspace();">退格</a>
+                                <a class="cal_btn cla_btn_org" href="javascript:;" onclick="document.getElementById(&#39;gaoji&#39;).value=0;document.getElementById(&#39;completeEprsPanel&#39;).innerHTML = &#39;&#39;;this.blur();">清屏</a>
+                            </li>
+                        </ul>
+                        <ul class="complete_table_main">
+                            <li>
+                                <a class="cal_btn" href="javascript:;" onclick="putmemory();">存储</a>
+                                <a class="cal_btn" href="javascript:;" onclick="getmemory();">取存</a>
+                                <a class="cal_btn" href="javascript:;" onclick="addmemory();">累存</a>
+                                <a class="cal_btn" href="javascript:;" onclick="multimemory();">积存</a>
+                                <a class="cal_btn" href="javascript:;" onclick="clearmemory();">清存</a>
+                                <a class="cal_btn cla_btn_org" href="javascript:;" onclick="clearall();">全清</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn fontArial" id="complete7" href="javascript:;" onclick="inputkey(&#39;7&#39;);">7</a>
+                                <a class="cal_btn fontArial" id="complete8" href="javascript:;" onclick="inputkey(&#39;8&#39;);">8</a>
+                                <a class="cal_btn fontArial" id="complete9" href="javascript:;" onclick="inputkey(&#39;9&#39;);">9</a>
+                                <a class="cal_btn cal_btn_gray fontArial" id="completeDivi" href="javascript:;" onclick="operation(&#39;/&#39;,6);;">÷</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" onclick="operation(&#39;%&#39;,6);">取余</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" onclick="operation(&#39;&amp;&#39;,3);">与</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn fontArial" id="complete4" href="javascript:;" onclick="inputkey(&#39;4&#39;);">4</a>
+                                <a class="cal_btn fontArial" id="complete5" href="javascript:;" onclick="inputkey(&#39;5&#39;);">5</a>
+                                <a class="cal_btn fontArial" id="complete6" href="javascript:;" onclick="inputkey(&#39;6&#39;);">6</a>
+                                <a class="cal_btn cal_btn_gray fontArial" id="completeMulti" href="javascript:;" onclick="operation(&#39;*&#39;,6);">x</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="changeDecimal" onclick="inputfunction(&#39;floor&#39;,&#39;deci&#39;);">取整</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" onclick="operation(&#39;|&#39;,1);">或</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn fontArial" id="complete1" href="javascript:;" onclick="inputkey(&#39;1&#39;);">1</a>
+                                <a class="cal_btn fontArial" id="complete2" href="javascript:;" onclick="inputkey(&#39;2&#39;);">2</a>
+                                <a class="cal_btn fontArial" id="complete3" href="javascript:;" onclick="inputkey(&#39;3&#39;);">3</a>
+                                <a class="cal_btn cal_btn_gray fontArial" id="completeSubtr" href="javascript:;" onclick="operation(&#39;-&#39;,5);">-</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" onclick="operation(&#39;&lt;&#39;,4);">左移</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" onclick="inputfunction(&#39;~&#39;,&#39;~&#39;);">非</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn fontArial" id="complete0" href="javascript:;" onclick="inputkey(&#39;0&#39;);">0</a>
+                                <a class="cal_btn fontArial" href="javascript:;" onclick="changeSign();">+/-</a>
+                                <a class="cal_btn " id="completeDot" href="javascript:;" onclick="inputkey(&#39;.&#39;);">.</a>
+                                <a class="cal_btn cal_btn_gray fontArial" id="completeAdd" href="javascript:;" onclick="operation(&#39;+&#39;,5);">+</a>
+                                <a class="cal_btn cal_btn_bla fontArial" id="completeEqual" href="javascript:;" onclick="result();">=</a>
+                                <a class="cal_btn cal_btn_gre " href="javascript:;" onclick="operation(&#39;x&#39;,2);">异或</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn cal_btn_dis" href="javascript:;" id="ka" onclick="inputkey(&#39;a&#39;);">A</a>
+                                <a class="cal_btn cal_btn_dis" href="javascript:;" id="kb" onclick="inputkey(&#39;b&#39;);">B</a>
+                                <a class="cal_btn cal_btn_dis" href="javascript:;" id="kc" onclick="inputkey(&#39;c&#39;);">C</a>
+                                <a class="cal_btn cal_btn_dis" href="javascript:;" id="kd" onclick="inputkey(&#39;d&#39;);">D</a>
+                                <a class="cal_btn cal_btn_dis" href="javascript:;" id="ke" onclick="inputkey(&#39;e&#39;);">E</a>
+                                <a class="cal_btn cal_btn_dis" href="javascript:;" id="kf" onclick="inputkey(&#39;f&#39;);">F</a>
+                            </li>
+                        </ul>
+                        <ul class="complete_more">
+                            <li>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="pi" onclick="inputfunction(&#39;pi&#39;,&#39;pi&#39;);">PI</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="e" onclick="inputfunction(&#39;e&#39;,&#39;e&#39;);">E</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="bt" onclick="inputfunction(&#39;dms&#39;,&#39;deg&#39;);">d.ms</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" onclick="addbracket(this);">(</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" onclick="disbracket(this);">)</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="ln" onclick="inputfunction(&#39;ln&#39;,&#39;exp&#39;);">In</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="log" onclick="inputfunction(&#39;log&#39;,&#39;expdec&#39;);">log</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="sin" onclick="inputtrig(&#39;sin&#39;,&#39;arcsin&#39;,&#39;hypsin&#39;,&#39;ahypsin&#39;);">sin</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="cos" onclick="inputtrig(&#39;cos&#39;,&#39;arccos&#39;,&#39;hypcos&#39;,&#39;ahypcos&#39;);">cos</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="tan" onclick="inputtrig(&#39;tan&#39;,&#39;arctan&#39;,&#39;hyptan&#39;,&#39;ahyptan&#39;);">tan</a>
+                            </li>
+                            <li>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" onclick="inputfunction(&#39;!&#39;,&#39;!&#39;);">n!</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" onclick="inputfunction(&#39;recip&#39;,&#39;recip&#39;);">1/x</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="sqr" onclick="inputfunction(&#39;sqr&#39;,&#39;sqrt&#39;);">x^2</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" id="cube" onclick="inputfunction(&#39;cube&#39;,&#39;cubt&#39;);">x^3</a>
+                                <a class="cal_btn cal_btn_gre" href="javascript:;" onclick="operation(&#39;^&#39;,7);">x^y</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        jisuanqi_run();
+        var oBtns = document.getElementById('btns');
+        var aLi = oBtns.getElementsByTagName('input');
+        var aLiLength = aLi.length;
+        var oCal = document.getElementById('calculator');
+        var aDiv = oCal.getElementsByClassName('calculator_con');
+
+        for (var i = 0; i < aLiLength; i++) {
+            (function (idx) {
+                aLi[idx].onclick = function () {
+                    document.getElementById('resultIpt').value = 0;
+                    document.getElementById('gaoji').value = 0;
+                    for (var j = 0; j < aLiLength; j++) {
+                        aLi[j].className = 'btnss';
+                        aDiv[j].className = 'calculator_con';
+                    }
+                    this.className = 'qiehuankuang_1_dq';
+                    aDiv[idx].className = 'calculator_con current';
+            }
+            })(i);
+    }
+</script>
+
+</body>
+</html>
