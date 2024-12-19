@@ -1,0 +1,42 @@
+<html>
+
+<head>
+</head>
+
+<body>
+    <div>
+        <textarea id="ADsoutput" style="width: 100%;resize:vertical;max-height: 90%;min-height: 20%;" cols="30" rows="10" readonly></textarea>
+    </div>
+    <button onclick="clickstartADs()">點擊開始刷廣告</button>
+    <a id="count">0</a>
+</body>
+<style>
+
+</style>
+<script>
+    var count = 0
+    var startAD =false
+ function clickstartADs(){
+    document.getElementById("ADsoutput").innerHTML="刷廣告了"
+    startAD = !startAD
+    
+ }
+ setInterval(()=>{
+    if(startAD){
+        try {
+           fetch("https://itweepinbelltor.com/zone").catch((data)=>{
+             document.getElementById("ADsoutput").innerHTML+= "\n廣告加載失敗=) "+data
+           });
+           count++
+document.getElementById("count")
+        } catch (error) {
+            document.getElementById("ADsoutput").innerHTML+= "\n"+error.message
+        }
+        
+        
+    }
+   
+},100)
+</script>
+
+</html>
