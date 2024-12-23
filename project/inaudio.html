@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>陰樂播放器</title>
+</head>
+<body>
+    <script>
+
+    const urlParams = new URLSearchParams(window.location.search);
+    var Id = urlParams.get('audio');
+    if (Id) {
+      try {
+        const audioElement = document.createElement('audio');
+        audioElement.setAttribute('src', 'data:audio/mp3;base64,' + Id);
+        audioElement.controls = true; // Add controls
+        document.body.appendChild(audioElement);
+      } catch (error) {
+        console.error('加載失敗(悲)', error);
+        document.write('加載失敗(悲)');
+      }
+    } else {
+      document.write('不是,哥們,什麼都沒有');
+    }
+    </script>
+</body>
+</html>
