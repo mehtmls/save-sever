@@ -7,7 +7,7 @@
     <script>
 
     const urlParams = new URLSearchParams(window.location.search);
-    var Id = urlParams.get('audio');
+    var Id = urlParams.get('audio').replace(" ","+");
     if (Id) {
       try {
         const audioElement = document.createElement('audio');
