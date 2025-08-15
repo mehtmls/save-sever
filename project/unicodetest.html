@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级Unicode方向控制符演示</title>
+    <style>
+        /* CSS 樣式與原始檔案相同 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4a9eff;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff8a00, #e52e71, #4a9eff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            color: #aaa;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(30, 30, 40, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel h2 {
+            color: #4a9eff;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .panel h2 i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: rgba(10, 10, 20, 0.7);
+            border: 1px solid #4a9eff;
+            border-radius: 10px;
+            padding: 15px;
+            color: #fff;
+            font-size: 1.1rem;
+            resize: vertical;
+            transition: all 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #ff8a00;
+            box-shadow: 0 0 0 3px rgba(255, 138, 0, 0.2);
+        }
+
+        .slider-container {
+            margin: 20px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #aaa;
+            font-size: 1rem;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            appearance: none;
+            -webkit-appearance: none;
+            background: rgba(74, 158, 255, 0.2);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4a9eff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            background: #ff8a00;
+            transform: scale(1.1);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button i {
+            margin-right: 8px;
+        }
+
+        .primary-btn {
+            background: linear-gradient(90deg, #4a9eff, #2a7bff);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: linear-gradient(90deg, #2a7bff, #4a9eff);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(42, 123, 255, 0.4);
+        }
+
+        .secondary-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ddd;
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .result-container {
+            margin-top: 20px;
+        }
+
+        #outputText {
+            min-height: 100px;
+            background: rgba(10, 10, 20, 0.7);
+            border: 1px solid #e52e71;
+            border-radius: 10px;
+            padding: 20px;
+            color: #fff;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            word-break: break-all;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+        }
+
+        .explanation {
+            background: rgba(30, 30, 40, 0.7);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .explanation h2 {
+            color: #ff8a00;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            margin: 15px 0;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .warning {
+            background: rgba(229, 46, 113, 0.2);
+            border-left: 4px solid #e52e71;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .control-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .control-card {
+            background: rgba(30, 30, 40, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-card h3 {
+            color: #4a9eff;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .hex-value {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(229, 46, 113, 0.3);
+            color: #ff6b9c;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 0 5px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-magic"></i> Unicode 方向控制符演示</h1>
+            <p class="subtitle" id="titles">创建看起来正常但包含隐藏控制字符的文本，复制粘贴后显示反转效果</p>
+        </header>
+
+        <div class="explanation">
+            <div class="panel">
+                <h2><i class="fas fa-keyboard"></i> 输入文本</h2>
+                <textarea id="inputText" placeholder="在此输入文本...">別急，有反轉</textarea>
+
+                <div class="slider-container">
+                    <label for="controlDensity">控制符密度: <span id="densityValue">5</span></label>
+                    <input type="range" id="controlDensity" class="slider" min="1" max="10" value="5">
+                </div>
+
+                <div class="buttons">
+                    <button id="transformBtn" class="primary-btn">
+                        <i class="fas fa-sync-alt"></i> 轉換文本
+                    </button>
+                    <button id="resetBtn" class="secondary-btn">
+                        <i class="fas fa-redo"></i> 重設
+                    </button>
+                </div>
+                <div class="buttons">
+                    <button id="copyBtn" class="primary-btn">
+                        <i class="fas fa-copy"></i> 複製文本
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="result-container">
+            <h2><i class="fas fa-terminal"></i> 轉換結果</h2>
+            <!-- 預設提示：轉換結果將顯示在這裡 -->
+            <div id="outputText">轉換結果將顯示在這裡...</div>
+        </div>
+
+        <div class="explanation">
+            <h2><i class="fas fa-info-circle"></i> 技術說明</h2>
+
+            <p>這個工具在文本中插入多個Unicode方向控制符</p>
+
+            <div class="warning">
+                <p><i class="fas fa-exclamation-triangle"></i> <strong>安全警告：</strong> 此類控制字符可能被用於混淆攻擊（如偽裝文件名）。請勿用於惡意目的。
+                </p>
+            </div>
+
+            <h3>為什麼這樣運作？</h3>
+            <p>Unicode方向控制符(U+202B和U+202E)會影響文本的渲染方向：</p>
+            <ul>
+                <li><strong>U+202B</strong> 強制後續文本從左向右顯示</li>
+                <li><strong>U+202E</strong> 強制後續文本從右向左顯示</li>
+                <li>當這些控制符出現在文本中時，會覆蓋預設的文本方向</li>
+                <li>複製到其他應用程式時，控制符會生效並導致文本顯示異常</li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>Unicode方向控制符演示工具 | 僅用於教育目的</p>
+            <p><span class="badge">U+202B</span> <span class="badge">U+202E</span> <span class="badge">文本反轉</span></p>
+        </footer>
+    </div>
+
+    <script>
+        // 獲取DOM元素
+        const titles = document.getElementById('titles');
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const transformBtn = document.getElementById('transformBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const controlDensity = document.getElementById('controlDensity');
+        const densityValue = document.getElementById('densityValue');
+
+        // 更新密度值顯示
+        controlDensity.addEventListener('input', () => {
+            densityValue.textContent = controlDensity.value;
+        });
+
+        // 轉換文本函數
+        function transformText(string) {
+            const RTL = "\u202E"; // Right-To-Left Override
+            const LTR = "\u202B"; // Left-To-Right Override
+            const PDF = "\u202C"; // Pop Directional Formatting
+function splitChars(word) {
+        return Array.from(word);
+    }
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function wrapNested(char) {
+        // 固定外层 RTL，内层随机
+        let layers = Math.floor(Math.random() * controlDensity.value) + 1; // 1~controlDensity.value 层
+        let wrapped = char;
+        for (let i = 0; i < layers; i++) {
+            let control = (i === 0) ? RTL : (Math.random() > 0.5 ? RTL : LTR);
+            wrapped = control + wrapped + PDF;
+        }
+        return wrapped;
+    }
+
+    function main(word) {
+        let original = splitChars(word);
+        let shuffled = shuffle([...original]);
+
+        let visualParts = [];
+        // 反向构建，保证视觉顺序正常
+        for (let i = original.length - 1; i >= 0; i--) {
+            let idx = shuffled.indexOf(original[i]);
+            let ch = shuffled.splice(idx, 1)[0];
+            visualParts.push(wrapNested(ch));
+        }
+
+        return visualParts.join("");
+    }
+
+    return main(string);
+        }
+
+        titles.textContent = transformText(titles.textContent)
+        // 顯示轉換結果
+        function showTransformedText() {
+            const result = transformText(inputText.value);
+            outputText.textContent = result;
+        }
+
+        // 複製文本到剪貼板
+        function copyToClipboard() {
+            const textToCopy = outputText.textContent;
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    const originalText = outputText.textContent;
+                    outputText.textContent = "✅ 已複製到剪貼板！請貼上到其他地方測試效果";
+
+                    setTimeout(() => {
+                        outputText.textContent = originalText;
+                    }, 3000);
+                })
+                .catch(err => {
+                    console.error('複製失敗:', err);
+                    outputText.textContent = "❌ 複製失敗，請手動選擇並複製";
+                });
+        }
+
+        // 重置表單
+        function resetForm() {
+            inputText.value = "別急，有反轉";
+            controlDensity.value = 5;
+            densityValue.textContent = "5";
+            showTransformedText();
+        }
+
+        // 添加事件監聽器
+        transformBtn.addEventListener('click', showTransformedText);
+        resetBtn.addEventListener('click', resetForm);
+
+        // 初始化頁面
+        window.addEventListener('load', showTransformedText);
+    </script>
+</body>
+
+</html>
