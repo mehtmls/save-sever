@@ -367,6 +367,7 @@
         const resetBtn = document.getElementById('resetBtn');
         const controlDensity = document.getElementById('controlDensity');
         const densityValue = document.getElementById('densityValue');
+        const copyBtn = document.getElementById('copyBtn');
 
         // 更新密度值顯示
         controlDensity.addEventListener('input', () => {
@@ -454,6 +455,7 @@ function splitChars(word) {
 
         // 添加事件監聽器
         transformBtn.addEventListener('click', showTransformedText);
+        copyBtn.addEventListener('click', copyToClipboard);
         resetBtn.addEventListener('click', resetForm);
 
         // 初始化頁面
