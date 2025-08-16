@@ -376,48 +376,77 @@
 
         // 轉換文本函數
         function transformText(string) {
-            const RTL = "\u202E"; // Right-To-Left Override
-            const LTR = "\u202B"; // Left-To-Right Override
-            const PDF = "\u202C"; // Pop Directional Formatting
-function splitChars(word) {
-        return Array.from(word);
+ const RTL = "\u202E";
+const LTR = "\u202B";
+const PDF = "\u202C";
+
+function getOneAndLast(array) {
+    return [array[0], array[array.length - 1]];
+}
+
+function NeutralUSE(char) {
+    return /[0-9\s.,，。、!?;:？！]/.test(char)
+}
+function swapFirstLast(str) {
+    if (str.length < 2) return str; // 长度小于2，直接返回
+    const first = str[0];
+    const last = str[str.length - 1];
+    const middle = str.slice(1, -1); // 中间部分
+    return last + middle + first;
+}
+
+ function visualizeBidi(str) {
+    return str.replaceAll(RTL, '[RTL]').replaceAll(LTR, '[LTR]').replaceAll(PDF, '[PDF]');
+}
+
+function pullUnicodeInTextBetween(before, after) {
+    if (NeutralUSE(before) && NeutralUSE(after)) {
+        return after + RTL + before + LTR;
+    }else{
+        return (
+            NeutralUSE(before)?(LTR+before+PDF):before
+        ) + (
+            NeutralUSE(before)?'':RTL
+        ) + (
+            NeutralUSE(after)?(LTR+after+PDF):after
+        ) + (
+            NeutralUSE(after)?'':LTR
+        );
+    }
+    
+}
+
+
+function makeFakeString(string) {
+    let NextDoString = string.split(''); // 分割每个字符
+    let finString = "";
+    while (NextDoString.length > 1) {
+        // 取第一个和最后一个字符
+        let add = getOneAndLast(NextDoString)
+            if (NeutralUSE(add[0])&&!NeutralUSE(add[1])) {
+    let temp=NextDoString[2]?NextDoString[2]:''
+    NextDoString[2]=NextDoString[1]
+    NextDoString[1]=temp
+    
+}
+if (NeutralUSE(add[1])&&!NeutralUSE(add[0])) {
+   NextDoString[0]+=NextDoString[1]
+   NextDoString[1]=""
+}
+        add = getOneAndLast(NextDoString)
+        finString += pullUnicodeInTextBetween(...add);
+        // 删除第一个和最后一个字符
+        NextDoString = NextDoString.slice(1, -1);
     }
 
-    function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
+    // 如果还剩一个字符，单独加上
+    if (NextDoString.length === 1) {
+        finString += (PDF+NextDoString[0]);
     }
 
-    function wrapNested(char) {
-        // 固定外层 RTL，内层随机
-        let layers = Math.floor(Math.random() * controlDensity.value) + 1; // 1~controlDensity.value 层
-        let wrapped = char;
-        for (let i = 0; i < layers; i++) {
-            let control = (i === 0) ? RTL : (Math.random() > 0.5 ? RTL : LTR);
-            wrapped = control + wrapped + PDF;
-        }
-        return wrapped;
-    }
-
-    function main(word) {
-        let original = splitChars(word);
-        let shuffled = shuffle([...original]);
-
-        let visualParts = [];
-        // 反向构建，保证视觉顺序正常
-        for (let i = original.length - 1; i >= 0; i--) {
-            let idx = shuffled.indexOf(original[i]);
-            let ch = shuffled.splice(idx, 1)[0];
-            visualParts.push(wrapNested(ch));
-        }
-
-        return visualParts.join("");
-    }
-
-    return main(string);
+    return finString;
+}
+return makeFakeString(string)
         }
 
         titles.textContent = transformText(titles.textContent)
