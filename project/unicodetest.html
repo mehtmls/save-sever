@@ -304,10 +304,10 @@
                 <h2><i class="fas fa-keyboard"></i> 输入文本</h2>
                 <textarea id="inputText" placeholder="在此输入文本...">別急，有反轉</textarea>
 
-                <div class="slider-container">
+                <!--div class="slider-container">
                     <label for="controlDensity">控制符密度: <span id="densityValue">5</span></label>
                     <input type="range" id="controlDensity" class="slider" min="1" max="10" value="5">
-                </div>
+                </div-->
 
                 <div class="buttons">
                     <button id="transformBtn" class="primary-btn">
@@ -365,90 +365,76 @@
         const outputText = document.getElementById('outputText');
         const transformBtn = document.getElementById('transformBtn');
         const resetBtn = document.getElementById('resetBtn');
-        const controlDensity = document.getElementById('controlDensity');
         const densityValue = document.getElementById('densityValue');
         const copyBtn = document.getElementById('copyBtn');
+        const RTL = "\u202E";
+        const LTR = "\u202B";
+        const PDF = "\u202C";
+        const LRM = "\u200E";
 
-        // 更新密度值顯示
-        controlDensity.addEventListener('input', () => {
-            densityValue.textContent = controlDensity.value;
-        });
+        const NeutralRanges = [
+            "\\u0020-\\u002F", // 基本標點 !"#$%&'()*+,-./
+            "\\u003A-\\u0040", // : ; < = > ? @
+            "\\u005B-\\u0060", // [ \ ] ^ _ `
+            "\\u007B-\\u007E", // { | } ~
+            "\\u00A0-\\u00BF", // Latin-1 標點與符號
+            "\\u2000-\\u206F", // General Punctuation
+            "\\u20A0-\\u20CF", // Currency Symbols
+            "\\u3000-\\u303F", // CJK 標點
+            "\\uFF00-\\uFFEF"  // 全形標點、符號
+        ];
 
-        // 轉換文本函數
-        function transformText(string) {
- const RTL = "\u202E";
-const LTR = "\u202B";
-const PDF = "\u202C";
+        // 動態拼接成正則
+        const NeutralRegex = new RegExp("[" + NeutralRanges.join("") + "]");
 
-function getOneAndLast(array) {
-    return [array[0], array[array.length - 1]];
-}
-
-function NeutralUSE(char) {
-    return /[0-9\s.,，。、!?;:？！]/.test(char)
-}
-function swapFirstLast(str) {
-    if (str.length < 2) return str; // 长度小于2，直接返回
-    const first = str[0];
-    const last = str[str.length - 1];
-    const middle = str.slice(1, -1); // 中间部分
-    return last + middle + first;
-}
-
- function visualizeBidi(str) {
-    return str.replaceAll(RTL, '[RTL]').replaceAll(LTR, '[LTR]').replaceAll(PDF, '[PDF]');
-}
-
-function pullUnicodeInTextBetween(before, after) {
-    if (NeutralUSE(before) && NeutralUSE(after)) {
-        return after + RTL + before + LTR;
-    }else{
-        return (
-            NeutralUSE(before)?(LTR+before+PDF):before
-        ) + (
-            NeutralUSE(before)?'':RTL
-        ) + (
-            NeutralUSE(after)?(LTR+after+PDF):after
-        ) + (
-            NeutralUSE(after)?'':LTR
-        );
-    }
-    
-}
-
-
-function makeFakeString(string) {
-    let NextDoString = string.split(''); // 分割每个字符
-    let finString = "";
-    while (NextDoString.length > 1) {
-        // 取第一个和最后一个字符
-        let add = getOneAndLast(NextDoString)
-            if (NeutralUSE(add[0])&&!NeutralUSE(add[1])) {
-    let temp=NextDoString[2]?NextDoString[2]:''
-    NextDoString[2]=NextDoString[1]
-    NextDoString[1]=temp
-    
-}
-if (NeutralUSE(add[1])&&!NeutralUSE(add[0])) {
-   NextDoString[0]+=NextDoString[1]
-   NextDoString[1]=""
-}
-        add = getOneAndLast(NextDoString)
-        finString += pullUnicodeInTextBetween(...add);
-        // 删除第一个和最后一个字符
-        NextDoString = NextDoString.slice(1, -1);
-    }
-
-    // 如果还剩一个字符，单独加上
-    if (NextDoString.length === 1) {
-        finString += (PDF+NextDoString[0]);
-    }
-
-    return finString;
-}
-return makeFakeString(string)
+        function getOneAndLast(array) {
+            return [array[0], array[array.length - 1]];
         }
 
+        // 判斷是否為中性字符
+        function isNeutral(char) {
+            return NeutralRegex.test(char);
+        }
+
+
+
+        function visualizeBidi(str) {
+            return str.replaceAll(RTL, '[RTL]').replaceAll(LTR, '[LTR]').replaceAll(PDF, '[PDF]').replaceAll(LRM, '[LRM]');
+        }
+
+        function pullUnicodeInTextBetween(before, after) {
+            /*        if (NeutralUSE(before) && NeutralUSE(after)) {
+                        return after + RTL + before + LTR;
+                    } else {*/
+            return RTL + before + LTR + after
+
+            // }
+
+        }
+
+
+        function transformText(string) {
+            let NextDoString = string.split('').reverse().map(ch =>
+                isNeutral(ch) ? LRM + ch + LRM : ch
+            ); // 分割每个字符
+            let finString = "";
+            while (NextDoString.length > 1) {
+                // 取第一个和最后一个字符
+                let add = getOneAndLast(NextDoString)
+                add = getOneAndLast(NextDoString)
+                finString += pullUnicodeInTextBetween(...add);
+                // 删除第一个和最后一个字符
+                NextDoString = NextDoString.slice(1, -1);
+            }
+
+            // 如果还剩一个字符，单独加上
+            if (NextDoString.length === 1) {
+                finString += (NextDoString[0]);
+            }
+            const result = finString
+            console.log(visualizeBidi(result))
+            return result
+        }
         titles.textContent = transformText(titles.textContent)
         // 顯示轉換結果
         function showTransformedText() {
@@ -477,8 +463,6 @@ return makeFakeString(string)
         // 重置表單
         function resetForm() {
             inputText.value = "別急，有反轉";
-            controlDensity.value = 5;
-            densityValue.textContent = "5";
             showTransformedText();
         }
 
@@ -491,5 +475,6 @@ return makeFakeString(string)
         window.addEventListener('load', showTransformedText);
     </script>
 </body>
+
 
 </html>
