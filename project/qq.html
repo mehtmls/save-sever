@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>自定义分享</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    h1 { text-align: center; color: #0078d7; }
+    .box {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      max-width: 500px;
+      margin: auto;
+    }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-top: 5px;
+    }
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+      background: #0078d7;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+    .preview {
+      margin-top: 20px;
+      padding: 15px;
+      background: #fafafa;
+      border: 1px dashed #ccc;
+      border-radius: 8px;
+    }
+    .preview img { max-width: 100%; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <h1>自定义分享</h1>
+  <div class="box">
+    <label>分享标题</label>
+    <input type="text" id="title" value="我的自定义标题">
+
+    <label>分享描述</label>
+    <textarea id="desc">这是自定义分享描述</textarea>
+
+    <label>分享链接</label>
+    <input type="text" id="url" value="https://www.example.com/">
+
+    <label>缩略图 URL</label>
+    <input type="text" id="img" value="https://www.example.com/logo.png">
+
+    <label>分享目标</label>
+    <select id="type">
+      <option value="1">QQ 好友</option>
+      <option value="8">QQ 空间</option>
+      <option value="23">微信好友</option>
+      <option value="24">微信朋友圈</option>
+    </select>
+
+    <button onclick="doShare()">立即分享</button>
+
+    <div class="preview" id="preview">
+      <h3>预览效果：</h3>
+      <p><b id="p-title"></b></p>
+      <p id="p-desc"></p>
+      <a id="p-url" href="#" target="_blank">链接</a>
+      <div><img id="p-img" src=""></div>
+    </div>
+  </div>
+
+  <script>
+    function updatePreview() {
+      document.getElementById('p-title').textContent = document.getElementById('title').value;
+      document.getElementById('p-desc').textContent = document.getElementById('desc').value;
+      document.getElementById('p-url').href = document.getElementById('url').value;
+      document.getElementById('p-url').textContent = document.getElementById('url').value;
+      document.getElementById('p-img').src = document.getElementById('img').value;
+    }
+
+    function doShare() {
+      updatePreview();
+      var data = {
+        title: document.getElementById('title').value,
+        desc: document.getElementById('desc').value,
+        share_type: parseInt(document.getElementById('type').value, 10),
+        share_url: document.getElementById('url').value,
+        image_url: document.getElementById('img').value,
+        puin: "2909288299", // 建议换成你自己申请的
+        appid: "100383922",
+        sourceName: "自定义分享Demo",
+        back: true
+      };
+
+      if (window.mqq && mqq.ui) {
+        mqq.ui.shareMessage(data, function(result) {
+          alert("分享结果: " + JSON.stringify(result));
+        });
+      } else {
+        alert("当前环境不支持 mqq（请在 QQ 内置浏览器中测试）");
+      }
+    }
+
+    // 初始化预览
+    updatePreview();
+  </script>
+</body>
+</html>
