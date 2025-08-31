@@ -1,76 +1,64 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>自定义QQ分享卡片示例</title>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-
-  <!-- 默认分享配置 -->
-  <meta itemprop="name" content="默认标题">
-  <meta name="description" itemprop="description" content="这是默认描述">
-  <meta itemprop="image" content="https://example.com/default.png">
-
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    button { margin: 10px 0; padding: 10px 20px; font-size: 16px; }
-  </style>
+  <title>自定义 QQ 分享卡片</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1">
 </head>
-<body>
-  <h1>自定义QQ分享卡片</h1>
-  <p>点击按钮即可动态修改 QQ 分享卡片的标题、描述、图片。</p>
-  <button onclick="setQQShareCard({
-      title: '体验AI代码助手',
-      desc: '一款智能的AI代码解读与优化工具',
-      imgUrl: 'https://qzonestyle.gtimg.cn/qzone/qzactStatics/imgs/20171123191603.png'
-    })">
-    设置为“AI助手分享卡片”
-  </button>
+<body style="font-family:Arial, sans-serif;padding:20px;background:#f5f5f5;">
+  <h2>自定义 QQ 分享卡片</h2>
+  <div style="background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);max-width:400px;">
+    <label>标题：</label><br>
+    <input id="titleInput" type="text" placeholder="请输入分享标题" style="width:100%;padding:8px;margin:5px 0;"><br>
 
-  <button onclick="setQQShareCard({
-      title: '自定义标题示例',
-      desc: '这里是一个自定义描述内容',
-      imgUrl: 'https://www.baidu.com/img/bd_logo1.png'
-    })">
-    设置为“自定义卡片”
-  </button>
+    <label>描述：</label><br>
+    <input id="descInput" type="text" placeholder="请输入分享描述" style="width:100%;padding:8px;margin:5px 0;"><br>
+
+    <label>图片 URL：</label><br>
+    <input id="imgInput" type="text" placeholder="请输入图片链接" style="width:100%;padding:8px;margin:5px 0;"><br>
+
+    <button onclick="applyShareConfig()" style="padding:10px 15px;background:#0078d7;color:#fff;border:none;border-radius:5px;cursor:pointer;">
+      生成分享卡片
+    </button>
+  </div>
+
+  <p style="margin-top:15px;color:#555;">⚠️ 填写后刷新 QQ 或 QQ 浏览器分享时生效</p>
 
   <script>
+    function applyShareConfig() {
+      const title = document.getElementById("titleInput").value.trim();
+      const desc  = document.getElementById("descInput").value.trim();
+      const imgUrl= document.getElementById("imgInput").value.trim();
+
+      if (!title || !desc || !imgUrl) {
+        alert("请完整填写标题、描述和图片 URL");
+        return;
+      }
+
+      setQQShareCard({ title, desc, imgUrl });
+      alert("✅ 分享卡片信息已更新，请在 QQ/QQ 浏览器分享查看效果");
+    }
+
     // 动态设置 QQ 分享卡片
     function setQQShareCard(shareConfig) {
-      let { title, desc, imgUrl } = shareConfig
+      let { title, desc, imgUrl } = shareConfig;
       let metaArr = [
-        {
-          attriKeyArr: ['itemprop'],
-          attriVal: 'name',
-          content: title
-        },
-        {
-          attriKeyArr: ['name', 'itemprop'],
-          attriVal: 'description',
-          content: desc
-        },
-        {
-          attriKeyArr: ['itemprop'],
-          attriVal: 'image',
-          content: imgUrl
-        }
-      ]
-      metaArr.forEach(metaData => resetMeta(metaData))
-      console.log("QQ分享卡片已更新：", shareConfig)
+        { attriKeyArr: ['itemprop'], attriVal: 'name', content: title },
+        { attriKeyArr: ['name','itemprop'], attriVal: 'description', content: desc },
+        { attriKeyArr: ['itemprop'], attriVal: 'image', content: imgUrl }
+      ];
+      metaArr.forEach(metaData => resetMeta(metaData));
     }
 
     function resetMeta(metaData) {
-      let { attriKeyArr, attriVal, content } = metaData
-      let headDom = document.getElementsByTagName('head')[0]
-      let metaDom = document.querySelector(`meta[${attriKeyArr[0]}="${attriVal}"]`)
-      if (metaDom) headDom.removeChild(metaDom)
-      metaDom = document.createElement('meta')
-      attriKeyArr.forEach(attriKey => {
-        metaDom.setAttribute(attriKey, attriVal)
-      })
-      metaDom.content = content
-      headDom.appendChild(metaDom)
+      let { attriKeyArr, attriVal, content } = metaData;
+      let headDom = document.getElementsByTagName('head')[0];
+      let metaDom = document.querySelector(`meta[${attriKeyArr[0]}="${attriVal}"]`);
+      if (metaDom) headDom.removeChild(metaDom);
+      metaDom = document.createElement('meta');
+      attriKeyArr.forEach(attriKey => metaDom.setAttribute(attriKey, attriVal));
+      metaDom.content = content;
+      headDom.appendChild(metaDom);
     }
   </script>
 </body>
