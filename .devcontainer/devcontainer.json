@@ -1,0 +1,8 @@
+{
+  "name": "Node.js Proxy Dev",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+  "postCreateCommand": "npm install"
+}
