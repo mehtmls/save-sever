@@ -369,10 +369,9 @@
                 dom.detailedStats.innerHTML = '';
 
                 try {
-                    // 設定超時 (10秒)
-                    /*const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 10000);
-                    */
+                    const controller = new AbortController();
+                    //const timeoutId = setTimeout(() => controller.abort(), 10000);
+                   
                     const response = await fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -496,4 +495,5 @@
     <!-- 注意：原 inline onclick 已移除，全由 script 管理 -->
 </body>
 </html>
+
 
