@@ -2,26 +2,29 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>Icon Wall Player</title>
+    <title>BadApple</title>
     <style>
-        #icon-wall {
-            display: grid;
-            gap: 2px;
-            background: #222;
-            padding: 10px;
-            width: fit-content;
-        }
-        .row { display: contents; }
-        .icon { width: 16px; height: 16px; }
-        .devto { background: #000; border-radius: 4px; }
-        .none { background: #eee; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<div id="icon-wall"></div>
+<div id="icon-wall">
+    <image src="" id="player"/>
+</div>
 
 <script>
+    function mapLogo(matrix, logos) {
+    // 使用 map 處理每一行
+    const mappedMatrix = matrix.map(row => 
+        row.map(val => logos[val])
+    );
+    
+    // 回傳包含矩陣與寬度的物件
+    return {
+        mappedMatrix: mappedMatrix,
+        width: matrix[0] ? matrix[0].length : 0 // 安全檢查
+    };
+}
     let videoData = [];
     let frameIndex = 0;
 
@@ -39,16 +42,9 @@
 
     function playFrame() {
         if (frameIndex >= videoData.length) frameIndex = 0;
-        const container = document.getElementById('icon-wall');
-        container.innerHTML = '';
-        
-        videoData[frameIndex].forEach(row => {
-            row.forEach(val => {
-                const div = document.createElement('div');
-                div.className = val ? 'icon devto' : 'icon none';
-                container.appendChild(div);
-            });
-        });
+        const container = document.getElementById('player');
+        const transform = mapLogo(videoData[frameIndex],["none","devto"])
+        container.src="https://skillicons.dev/icons?i="+(transform.mappedMatrix).flat(Infinity).join()+"&perline="+transform.width
         frameIndex++;
     }
 
