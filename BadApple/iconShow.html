@@ -4,60 +4,68 @@
     <meta charset="UTF-8" />
     <title>BadApple</title>
     <style>
-        #player { max-width: 100%; height: auto; object-fit: contain; }
+      #player { 
+        max-width: 100%; 
+        height: auto; 
+        object-fit: contain; 
+        display: block; 
+      }
     </style>
   </head>
   <body>
     <div id="icon-wall">
-      <img src="" id="player" />
+      <img id="player" alt="BadApple Animation" />
     </div>
 
     <script>
       let videoData = [];
       let frameIndex = 0;
-      let urlBuffer = []; // 緩衝區
-      const BUFFER_SIZE = 30; // 預先緩衝 30 幀
+      let urlBuffer = []; 
+      const BUFFER_SIZE = 30; 
 
       function mapLogo(matrix, logos) {
-        const mappedMatrix = matrix.map((row) => row.map((val) => logos[val]));
+        const mapped = matrix.flat().map(val => logos[val]);
         return {
-          mappedMatrix: mappedMatrix,
+          icons: mapped.join(','),
           width: matrix[0] ? matrix[0].length : 0,
         };
       }
 
-      // 生成單幀的 URL
       function generateUrl(frame) {
-        const transform = mapLogo(frame, ["none", "devto"]);
-        return "https://skillicons.dev/icons?i=" +
-          transform.mappedMatrix.flat(Infinity).join() +
-          "&perline=" + transform.width;
+        const { icons, width } = mapLogo(frame, ["none", "devto"]);
+        return `https://skillicons.dev/icons?i=${icons}&perline=${width}`;
+      }
+
+      // 填充緩衝區：維持 30 幀的預載入空間
+      function fillBuffer() {
+        while (urlBuffer.length < BUFFER_SIZE && videoData.length > 0) {
+          // 計算目標幀索引，實現循環播放
+          const nextIdx = (frameIndex + urlBuffer.length) % videoData.length;
+          urlBuffer.push(generateUrl(videoData[nextIdx]));
+        }
       }
 
       async function loadData() {
-        const response = await fetch("video_array.txt");
-        videoData = await response.json();
-        
-        // 開始循環播放
-        setInterval(playFrame, 100); 
+        try {
+          const response = await fetch("video_array.txt");
+          videoData = await response.json();
+          // 開始播放
+          setInterval(playFrame, 100); 
+        } catch (e) {
+          console.error("無法載入數據:", e);
+        }
       }
 
       function playFrame() {
-        // 緩衝區填充邏輯
-        if (urlBuffer.length < BUFFER_SIZE && frameIndex + urlBuffer.length < videoData.length) {
-            const nextIdx = frameIndex + urlBuffer.length;
-            const img = new Image();
-            img.src = generateUrl(videoData[nextIdx]);
-            urlBuffer.push(img.src);
-        }
+        if (videoData.length === 0) return;
+
+        fillBuffer();
 
         if (urlBuffer.length > 0) {
-            const container = document.getElementById("player");
-            container.src = urlBuffer.shift(); // 從緩衝區取出並播放
-            frameIndex++;
+          const container = document.getElementById("player");
+          container.src = urlBuffer.shift(); 
+          frameIndex = (frameIndex + 1) % videoData.length;
         }
-
-        if (frameIndex >= videoData.length) frameIndex = 0;
       }
 
       loadData();
