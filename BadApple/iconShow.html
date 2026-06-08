@@ -4,49 +4,60 @@
     <meta charset="UTF-8" />
     <title>BadApple</title>
     <style>
-        #player {
-  max-width: 100%;          /* 确保在大屏幕上不溢出 */
-  height: auto;             /* 保持 SVG 的宽高比 */
-  object-fit: contain;      /* 保持比例缩放，不拉伸变形 */
-}
+        #player { max-width: 100%; height: auto; object-fit: contain; }
     </style>
   </head>
   <body>
     <div id="icon-wall">
-      <image src="" id="player" />
+      <img src="" id="player" />
     </div>
 
     <script>
-      function mapLogo(matrix, logos) {
-        // 使用 map 處理每一行
-        const mappedMatrix = matrix.map((row) => row.map((val) => logos[val]));
-
-        // 回傳包含矩陣與寬度的物件
-        return {
-          mappedMatrix: mappedMatrix,
-          width: matrix[0] ? matrix[0].length : 0, // 安全檢查
-        };
-      }
       let videoData = [];
       let frameIndex = 0;
+      let urlBuffer = []; // 緩衝區
+      const BUFFER_SIZE = 30; // 預先緩衝 30 幀
+
+      function mapLogo(matrix, logos) {
+        const mappedMatrix = matrix.map((row) => row.map((val) => logos[val]));
+        return {
+          mappedMatrix: mappedMatrix,
+          width: matrix[0] ? matrix[0].length : 0,
+        };
+      }
+
+      // 生成單幀的 URL
+      function generateUrl(frame) {
+        const transform = mapLogo(frame, ["none", "devto"]);
+        return "https://skillicons.dev/icons?i=" +
+          transform.mappedMatrix.flat(Infinity).join() +
+          "&perline=" + transform.width;
+      }
 
       async function loadData() {
         const response = await fetch("video_array.txt");
         videoData = await response.json();
-        // 開始播放
-        setInterval(playFrame, 100); // 10fps = 100ms
+        
+        // 開始循環播放
+        setInterval(playFrame, 100); 
       }
 
       function playFrame() {
+        // 緩衝區填充邏輯
+        if (urlBuffer.length < BUFFER_SIZE && frameIndex + urlBuffer.length < videoData.length) {
+            const nextIdx = frameIndex + urlBuffer.length;
+            const img = new Image();
+            img.src = generateUrl(videoData[nextIdx]);
+            urlBuffer.push(img.src);
+        }
+
+        if (urlBuffer.length > 0) {
+            const container = document.getElementById("player");
+            container.src = urlBuffer.shift(); // 從緩衝區取出並播放
+            frameIndex++;
+        }
+
         if (frameIndex >= videoData.length) frameIndex = 0;
-        const container = document.getElementById("player");
-        const transform = mapLogo(videoData[frameIndex], ["none", "devto"]);
-        container.src =
-          "https://skillicons.dev/icons?i=" +
-          transform.mappedMatrix.flat(Infinity).join() +
-          "&perline=" +
-          transform.width;
-        frameIndex++;
       }
 
       loadData();
