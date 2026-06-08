@@ -1,54 +1,55 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>BadApple</title>
     <style>
-    </style>
-</head>
-<body>
-
-<div id="icon-wall">
-    <image src="" id="player"/>
-</div>
-
-<script>
-    function mapLogo(matrix, logos) {
-    // 使用 map 處理每一行
-    const mappedMatrix = matrix.map(row => 
-        row.map(val => logos[val])
-    );
-    
-    // 回傳包含矩陣與寬度的物件
-    return {
-        mappedMatrix: mappedMatrix,
-        width: matrix[0] ? matrix[0].length : 0 // 安全檢查
-    };
+        #player {
+  max-width: 100%;          /* 确保在大屏幕上不溢出 */
+  height: auto;             /* 保持 SVG 的宽高比 */
+  object-fit: contain;      /* 保持比例缩放，不拉伸变形 */
 }
-    let videoData = [];
-    let frameIndex = 0;
+    </style>
+  </head>
+  <body>
+    <div id="icon-wall">
+      <image src="" id="player" />
+    </div>
 
-    async function loadData() {
-        const response = await fetch('video_array.txt');
+    <script>
+      function mapLogo(matrix, logos) {
+        // 使用 map 處理每一行
+        const mappedMatrix = matrix.map((row) => row.map((val) => logos[val]));
+
+        // 回傳包含矩陣與寬度的物件
+        return {
+          mappedMatrix: mappedMatrix,
+          width: matrix[0] ? matrix[0].length : 0, // 安全檢查
+        };
+      }
+      let videoData = [];
+      let frameIndex = 0;
+
+      async function loadData() {
+        const response = await fetch("video_array.txt");
         videoData = await response.json();
-        
-        // 設定網格寬度 (對應 Python 中的 target_width)
-        const width = videoData[0][0].length;
-        document.getElementById('icon-wall').style.gridTemplateColumns = `repeat(${width}, 1fr)`;
-        
         // 開始播放
         setInterval(playFrame, 100); // 10fps = 100ms
-    }
+      }
 
-    function playFrame() {
+      function playFrame() {
         if (frameIndex >= videoData.length) frameIndex = 0;
-        const container = document.getElementById('player');
-        const transform = mapLogo(videoData[frameIndex],["none","devto"])
-        container.src="https://skillicons.dev/icons?i="+(transform.mappedMatrix).flat(Infinity).join()+"&perline="+transform.width
+        const container = document.getElementById("player");
+        const transform = mapLogo(videoData[frameIndex], ["none", "devto"]);
+        container.src =
+          "https://skillicons.dev/icons?i=" +
+          transform.mappedMatrix.flat(Infinity).join() +
+          "&perline=" +
+          transform.width;
         frameIndex++;
-    }
+      }
 
-    loadData();
-</script>
-</body>
+      loadData();
+    </script>
+  </body>
 </html>
