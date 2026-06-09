@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
-    <title>BadApple</title>
+    <title>BadApple Preloaded Player</title>
     <style>
       #player { 
         max-width: 100%; 
@@ -34,23 +34,32 @@
         return `https://skillicons.dev/icons?i=${icons}&perline=${width}`;
       }
 
-      async function loadData() {
+     async function loadData() {
         try {
           const response = await fetch("video_array.txt");
           const videoData = await response.json();
           
-          // 一口氣計算所有幀的 URL
+          // 1. 初始化一個陣列來儲存已載入的圖片物件
+          // 這將會強制瀏覽器將圖片存入緩存
+          const preload = async (url) => {
+            return new Promise((resolve) => {
+              const img = new Image();
+              img.onload = resolve; // 確保圖片完全下載完才算完成
+              img.src = url;
+            });
+          };
+
+          // 2. 一口氣產生所有 URL
           urlArray = videoData.map(frame => generateUrl(frame));
-          
-          console.log("所有幀已預載入完成，共", urlArray.length, "幀");
-          
+          // 4. 利用 Promise.all 併發下載（注意：這會吃掉大量頻寬）
+          // 若幀數太多，建議分批下載，避免瀏覽器崩潰
+          await Promise.all(urlArray.map(url => preload(url)));
           // 開始播放
           setInterval(playFrame, 100); 
         } catch (e) {
-          console.error("無法載入數據:", e);
+          console.error("載入失敗:", e);
         }
       }
-
       function playFrame() {
         if (urlArray.length === 0) return;
 
