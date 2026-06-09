@@ -18,15 +18,15 @@
     </div>
 
     <script>
-      let urlArray = []; // 預先計算好的所有幀 URL
+  let videoData = [];
       let frameIndex = 0;
+      const BUFFER_SIZE = 30;
+      // 初始化一個包含 30 個 Image 物件的陣列，作為硬體級快取池
+      let BufferPool = Array.from({ length: BUFFER_SIZE }, () => new Image());
 
       function mapLogo(matrix, logos) {
         const mapped = matrix.flat().map(val => logos[val]);
-        return {
-          icons: mapped.join(','),
-          width: matrix[0] ? matrix[0].length : 0,
-        };
+        return { icons: mapped.join(','), width: matrix[0] ? matrix[0].length : 0 };
       }
 
       function generateUrl(frame) {
@@ -34,41 +34,42 @@
         return `https://skillicons.dev/icons?i=${icons}&perline=${width}`;
       }
 
-     async function loadData() {
-        try {
-          const response = await fetch("video_array.txt");
-          const videoData = await response.json();
-          
-          // 1. 初始化一個陣列來儲存已載入的圖片物件
-          // 這將會強制瀏覽器將圖片存入緩存
-          const preload = async (url) => {
-            return new Promise((resolve) => {
-              const img = new Image();
-              img.onload = resolve; // 確保圖片完全下載完才算完成
-              img.src = url;
-            });
-          };
-
-          // 2. 一口氣產生所有 URL
-          urlArray = videoData.map(frame => generateUrl(frame));
-        
-          for (let i = 0; i < urlArray.length; i++) {
-            await preload(urlArray[i])
-          }
-          // 開始播放
-          setInterval(playFrame, 100); 
-        } catch (e) {
-          console.error("載入失敗:", e);
+      function fillBuffer() {
+        // 預載入策略：將未來 30 幀預先寫入 Pool
+        for (let i = 0; i < BUFFER_SIZE; i++) {
+          const targetIdx = (frameIndex + i) % videoData.length;
+          // 將生成的 URL 賦給對應的 Image 物件，瀏覽器會自動開始下載
+          BufferPool[i].src = generateUrl(videoData[targetIdx]);
         }
       }
-      function playFrame() {
-        if (urlArray.length === 0) return;
 
+      async function loadData() {
+        try {
+          const response = await fetch("video_array.txt");
+          videoData = await response.json();
+          // 初始化時先填滿緩衝
+          fillBuffer();
+          setInterval(playFrame, 100); 
+        } catch (e) {
+          console.error("數據載入失敗:", e);
+        }
+      }
+
+      function playFrame() {
+        if (videoData.length === 0) return;
+
+        // 1. 取得當前幀的圖片（從緩衝池拿）
         const container = document.getElementById("player");
-        container.src = urlArray[frameIndex]; 
-        
-        // 更新索引並循環
-        frameIndex = (frameIndex + 1) % urlArray.length;
+        container.src = BufferPool[0].src; 
+
+        // 2. 更新索引
+        frameIndex = (frameIndex + 1) % videoData.length;
+
+        // 3. 滾動緩衝池：將已播放的移到最後，並更新為最新的未來幀
+        const usedImg = BufferPool.shift(); // 取出第一個
+        const nextIdx = (frameIndex + BUFFER_SIZE - 1) % videoData.length;
+        usedImg.src = generateUrl(videoData[nextIdx]); // 更新為最新的 frame
+        BufferPool.push(usedImg); // 放回尾端
       }
 
       loadData();
