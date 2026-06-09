@@ -51,9 +51,10 @@
 
           // 2. 一口氣產生所有 URL
           urlArray = videoData.map(frame => generateUrl(frame));
-          // 4. 利用 Promise.all 併發下載（注意：這會吃掉大量頻寬）
-          // 若幀數太多，建議分批下載，避免瀏覽器崩潰
-          await Promise.all(urlArray.map(url => preload(url)));
+        
+          for (let i = 0; i < urlArray.length; i++) {
+            await preload(url)
+          }
           // 開始播放
           setInterval(playFrame, 100); 
         } catch (e) {
