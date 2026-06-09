@@ -18,10 +18,8 @@
     </div>
 
     <script>
-      let videoData = [];
+      let urlArray = []; // 預先計算好的所有幀 URL
       let frameIndex = 0;
-      let urlBuffer = []; 
-      const BUFFER_SIZE = 30; 
 
       function mapLogo(matrix, logos) {
         const mapped = matrix.flat().map(val => logos[val]);
@@ -32,23 +30,20 @@
       }
 
       function generateUrl(frame) {
-        const { icons, width } = mapLogo(frame, ["devto","none"]);
+        const { icons, width } = mapLogo(frame, ["none", "devto"]);
         return `https://skillicons.dev/icons?i=${icons}&perline=${width}`;
-      }
-
-      // 填充緩衝區：維持 30 幀的預載入空間
-      function fillBuffer() {
-        while (urlBuffer.length < BUFFER_SIZE && videoData.length > 0) {
-          // 計算目標幀索引，實現循環播放
-          const nextIdx = (frameIndex + urlBuffer.length) % videoData.length;
-          urlBuffer.push(generateUrl(videoData[nextIdx]));
-        }
       }
 
       async function loadData() {
         try {
           const response = await fetch("video_array.txt");
-          videoData = await response.json();
+          const videoData = await response.json();
+          
+          // 一口氣計算所有幀的 URL
+          urlArray = videoData.map(frame => generateUrl(frame));
+          
+          console.log("所有幀已預載入完成，共", urlArray.length, "幀");
+          
           // 開始播放
           setInterval(playFrame, 100); 
         } catch (e) {
@@ -57,15 +52,13 @@
       }
 
       function playFrame() {
-        if (videoData.length === 0) return;
+        if (urlArray.length === 0) return;
 
-        fillBuffer();
-
-        if (urlBuffer.length > 0) {
-          const container = document.getElementById("player");
-          container.src = urlBuffer.shift(); 
-          frameIndex = (frameIndex + 1) % videoData.length;
-        }
+        const container = document.getElementById("player");
+        container.src = urlArray[frameIndex]; 
+        
+        // 更新索引並循環
+        frameIndex = (frameIndex + 1) % urlArray.length;
       }
 
       loadData();
