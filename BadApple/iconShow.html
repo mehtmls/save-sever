@@ -53,7 +53,7 @@
           urlArray = videoData.map(frame => generateUrl(frame));
         
           for (let i = 0; i < urlArray.length; i++) {
-            await preload(url)
+            await preload(urlArray[i])
           }
           // 開始播放
           setInterval(playFrame, 100); 
