@@ -12,37 +12,36 @@
     <script>
         var count = 0
         var startAD = false
+        var interval = null
         function clickstartADs() {
-            document.getElementById("ADsoutput").innerHTML = startAD?"點擊開始刷廣告": "刷廣告中"
-            startAD = !startAD
-
-        }
-        setInterval(()=> {
             if (startAD) {
-                try {
-                    fetch("https://itweepinbelltor.com/zone").then((response)=> {
-                        if (response.ok) {
-                            document.getElementById("ADsoutput").innerHTML += "\n什么？广告成功加载了？"
-                        } else {
+                clearInterval(interval)
+                interval = null
+                startAD = false
+            } else {
+                startAD = true
+                interval = setInterval(()=> {
+                    try {
+                        fetch("https://itweepinbelltor.com/zone").then((response)=> {
+                            if (response.ok) {
+                                document.getElementById("ADsoutput").innerHTML += "\n什么？广告成功加载了？"
+                            } else {
+                                count++
+                                document.getElementById("count").innerHTML = count
+                            }
+                        }).catch(()=> {
                             count++
                             document.getElementById("count").innerHTML = count
-
-
-                        }
-                    }).catch(()=> {
+                        });
+                    } catch (error) {
                         count++
                         document.getElementById("count").innerHTML = count
-                    });
-
-                } catch (error) {
-                    count++
-                    document.getElementById("count").innerHTML = count
-                }
-
-
+                    }
+                }, 10)
             }
+            document.getElementById("ADsoutput").innerHTML = startAD? "刷廣告中": "已停止刷廣告"
+        }
 
-        }, 10)
     </script>
 </body>
 </html>
