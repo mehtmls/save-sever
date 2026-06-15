@@ -22,6 +22,7 @@
                 startAD = true
                 interval = setInterval(()=> {
                     try {
+                       //本期沒有任何一個廣告商受到傷害
                         fetch("https://itweepinbelltor.com/zone").then((response)=> {
                             if (response.ok) {
                                 document.getElementById("ADsoutput").innerHTML += "\n什么？广告成功加载了？"
