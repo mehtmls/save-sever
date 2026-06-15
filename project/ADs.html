@@ -23,9 +23,15 @@
                     fetch("https://itweepinbelltor.com/zone").then((response)=> {
                         if (response.ok) {
                             document.getElementById("ADsoutput").innerHTML += "\n什么？广告成功加载了？"
-                        }else{
-                            throw new Error()
+                        } else {
+                            count++
+                            document.getElementById("count").innerHTML = count
+
+
                         }
+                    }).catch(()=> {
+                        count++
+                        document.getElementById("count").innerHTML = count
                     });
 
                 } catch (error) {
