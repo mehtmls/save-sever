@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>反方向的英文</title>
+    <style>
+      .row {
+        display: flex;
+      }
+      .column {
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="column">
+      <input type="text" placeholder="输入内容..." />
+      <div class="row">
+        <input type="text" placeholder="输出内容..." disabled />
+        <label><input type="checkbox" id="flipX" /> 左右翻转</label>
+        <label><input type="checkbox" id="flipY" /> 上下翻转</label>
+        <button>点我翻转</button>
+      </div>
+    </div>
+    <script>
+      const inputSource = document.querySelector(
+        'input[type="text"]:not([disabled])',
+      );
+      const inputOutput = document.querySelector("input[disabled]");
+      const btn = document.querySelector("button");
+      // 字符矩阵：定义每个字母在翻转后的归宿
+      // { 原字符: [原, 左右翻转, 上下翻转, 全翻转] }
+      const charMatrix = {
+        a: ["a", "Ƃ", "ɘ", "ɐ"],
+        b: ["b", "d", "p", "q"],
+        c: ["c", "ɔ", "ϲ", "ɔ"],
+        d: ["d", "b", "q", "p"],
+        e: ["e", "ɘ", "6", "ə"],
+        f: ["f", "ʇ", "t", "Ɉ"],
+        g: ["g", "ϱ", "ƌ", "ᵷ"],
+        h: ["h", "⑁", "μ", "ɥ"],
+        i: ["i", "i", "!", "!"],
+        j: ["j", "ᒑ", "ṛ", "ĺ"],
+        k: ["k", "ʞ", "ĸ", "ʞ"],
+        l: ["l", "l", "l", "l"],
+        m: ["m", "m", "ɯ", "ɯ"],
+        n: ["n", "∩", "U", "u"],
+        o: ["o", "o", "o", "o"],
+        p: ["р", "q", "b", "d"],
+        q: ["q", "p", "d", "b"],
+        r: ["r", "า", "ᒡ", "ɹ"],
+        s: ["s", "ƨ", "ƨ", "s"],
+        t: ["t", "ɟ", "ʄ", "ʇ"],
+        u: ["u", "U", "∩", "n"],
+        v: ["v", "v", "^", "^"],
+        w: ["w", "w", "ʍ", "ʍ"],
+        x: ["x", "x", "x", "x"],
+        y: ["y", "ү", "λ", "ʎ"],
+        z: ["z", "ऽ", "ऽ", "z"],
+        A: ["A", "Α", "∀", "∀"],
+        B: ["B", "ᗺ", "B", "ᗺ"],
+        C: ["C", "Ͻ", "C", "Ͻ"],
+        D: ["D", "ᗡ", "D", "ᗡ"],
+        E: ["Ε", "Ǝ", "Е", "∃"],
+        F: ["F", "ꟻ", "ᖶ", "Ⅎ"],
+        G: ["G", "ච", "ᘓ", "⅁"],
+        H: ["H", "H", "H", "H"],
+        I: ["I", "I", "I", "I"],
+        J: ["J", "ᒐ", "ᒉ", "ᒋ"],
+        K: ["K", "𝈲", "K", "𝈲"],
+        L: ["L", "ᒧ", "Г", "⅂"],
+        M: ["M", "Μ", "ꟽ", "ꟽ"],
+        N: ["N", "И", "И", "N"],
+        O: ["O", "O", "O", "O"],
+        P: ["P", "ꟼ", "Ь", "Ԁ"],
+        Q: ["О", "O", "O", "O"],
+        R: ["R", "Я", "ʁ", "ᴚ"],
+        S: ["S", "Ꙅ", "Ƨ", "S"],
+        T: ["T", "T", "⊥", "⊥"],
+        U: ["U", "U", "ᑎ", "ᑎ"],
+        V: ["V", "V", "Λ", "Λ"],
+        W: ["W", "W", "ʍ", "ʍ"],
+        X: ["X", "Χ", "Χ", "Χ"],
+        Y: ["Y", "Y", "⅄", "⅄"],
+        Z: ["Z", "ऽ", "ऽ", "Z"],
+      };
+
+      btn.addEventListener("click", () => {
+        let text = inputSource.value;
+
+        // 假设：
+        // flipX = true (左右翻转)
+        // flipY = true (上下翻转)
+        const flipX = document.getElementById("flipX").checked;
+        const flipY = document.getElementById("flipY").checked;
+
+        // 计算索引:
+        // 原字符是 index 0
+        // 左右翻转 +1
+        // 上下翻转 +2
+        // 同时翻转 +3
+        //使用非常高级(?)的算法
+        const index = (flipY << 1) | flipX;
+
+        // 1. 先处理字符映射
+        let charArray = text.split("").map((char) => {
+          return charMatrix[char] ? charMatrix[char][index] : char;
+        });
+
+        // 2. 根据 flipX 决定是否翻转数组
+        if (flipX) {
+          charArray.reverse();
+        }
+
+        // 3. 最后拼接成字符串
+        let result = charArray.join("");
+        inputOutput.value = result;
+      });
+    </script>
+  </body>
+</html>
