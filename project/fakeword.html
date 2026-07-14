@@ -1,34 +1,106 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>反方向的英文</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-      .row {
-        display: flex;
+      :root{
+        --bg1:#0f172a; /* slate-900 */
+        --bg2:#0b1220;
+        --card:#0b1326;
+        --muted:#94a3b8;
+        --accent:#7c3aed;
+        --glass: rgba(255,255,255,0.04);
       }
-      .column {
-        display: flex;
-        flex-direction: column;
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        margin:0;
+        font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+        background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 100%);
+        color:#e6eef8;
+        -webkit-font-smoothing:antialiased;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        padding:24px;
+      }
+      .app{
+        width:100%;
+        max-width:820px;
+        background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        border-radius:12px;
+        padding:28px;
+        box-shadow:0 8px 30px rgba(2,6,23,0.6);
+        border:1px solid rgba(255,255,255,0.03);
+      }
+      .header{
+        display:flex;align-items:center;gap:12px;margin-bottom:12px
+      }
+      .title{
+        margin:0;font-size:1.25rem;font-weight:600
+      }
+      .desc{color:var(--muted);font-size:0.9rem;margin-top:4px}
+      .controls{
+        display:grid;grid-template-columns:1fr 240px;gap:12px;align-items:center;margin-top:12px
+      }
+      input[type="text"]{
+        width:100%;padding:12px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:var(--glass);color:inherit;font-size:1rem
+      }
+      input[disabled]{opacity:0.9}
+      .actions{display:flex;gap:10px;align-items:center}
+      .switch{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:0.95rem}
+      .btn{
+        appearance:none;border:0;padding:10px 14px;border-radius:8px;background:linear-gradient(90deg,var(--accent),#5b21b6);color:white;font-weight:600;cursor:pointer;box-shadow:0 6px 18px rgba(124,58,237,0.18)
+      }
+      .btn:active{transform:translateY(1px)}
+      .small{font-size:0.9rem;padding:8px 10px}
+      footer{margin-top:14px;color:var(--muted);font-size:0.85rem;text-align:right}
+      @media (max-width:720px){
+        .controls{grid-template-columns:1fr;}
       }
     </style>
   </head>
   <body>
-    <div class="column">
-      <input type="text" placeholder="输入内容..." />
-      <div class="row">
-        <input type="text" placeholder="输出内容..." disabled />
-        <label><input type="checkbox" id="flipX" /> 左右翻转</label>
-        <label><input type="checkbox" id="flipY" /> 上下翻转</label>
-        <button>点我翻转</button>
-      </div>
-    </div>
+    <main class="app" role="main">
+      <header class="header">
+        <div>
+          <h1 class="title">反方向的英文字</h1>
+          <div class="desc">輸入文字後選擇翻轉方向，按下「翻轉」查看結果。</div>
+        </div>
+      </header>
+
+      <section class="controls" aria-labelledby="io-label">
+        <div>
+          <label id="io-label" style="display:block;color:var(--muted);font-size:0.85rem;margin-bottom:6px">輸入</label>
+          <input id="inputSource" type="text" placeholder="輸入內容..." aria-label="輸入內容" />
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="inputOutput" type="text" placeholder="輸出內容..." disabled aria-label="輸出內容" />
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="actions">
+              <label class="switch"><input id="flipX" type="checkbox" /> 左右翻轉</label>
+              <label class="switch"><input id="flipY" type="checkbox" /> 上下翻轉</label>
+            </div>
+            <div>
+              <button id="flipBtn" class="btn small">翻轉</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer>提示：同時勾選左右與上下，會進行完全翻轉。</footer>
+    </main>
     <script>
-      const inputSource = document.querySelector(
-        'input[type="text"]:not([disabled])',
-      );
-      const inputOutput = document.querySelector("input[disabled]");
-      const btn = document.querySelector("button");
+      const inputSource = document.getElementById("inputSource");
+      const inputOutput = document.getElementById("inputOutput");
+      const btn = document.getElementById("flipBtn");
       // 字符矩阵：定义每个字母在翻转后的归宿
       // { 原字符: [原, 左右翻转, 上下翻转, 全翻转] }
       const charMatrix = {
