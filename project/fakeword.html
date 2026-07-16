@@ -219,14 +219,14 @@
         }
         // 2. map字符
         
-        let charArray = text.split("").map((char) => {
+        let charArray = text.map((char) => {
           return charMatrix[char] ? charMatrix[char][index] : char;
         });
 
         
 
         // 3. 最后拼接成字符串
-        let result = text.join("");
+        let result = charArray.join("");
         inputOutput.value = result;
       });
     </script>
