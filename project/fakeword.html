@@ -159,7 +159,7 @@
         //-----------------------
         0: ["0", "0", "0", "0"],
         1: ["1", "߁", "⥡", "⥝"],
-        2: ["2", "S", "ᘕ", "↊ᘔ"],
+        2: ["2", "S", "ᘕ", "ᘔ"],
         3: ["3", "𝈡", "3", "𝈡"],
         4: ["4", "◺", "◹", "߈"],
         5: ["5", "ਟ", "Ⴒ", "ↅ̲"],
@@ -197,7 +197,7 @@
       };
 
       btn.addEventListener("click", () => {
-        let text = inputSource.value;
+        let text = inputSource.value.split("");
 
         // 假设：
         // flipX = true (左右翻转)
@@ -213,18 +213,20 @@
         //使用非常高级(?)的算法
         const index = (flipY << 1) | flipX;
 
-        // 1. 先处理字符映射
+        // 1. 先根据 flipX 决定是否翻转数组
+        if (flipX) {
+          text.reverse();
+        }
+        // 2. map字符
+        
         let charArray = text.split("").map((char) => {
           return charMatrix[char] ? charMatrix[char][index] : char;
         });
 
-        // 2. 根据 flipX 决定是否翻转数组
-        if (flipX) {
-          charArray.reverse();
-        }
+        
 
         // 3. 最后拼接成字符串
-        let result = charArray.join("");
+        let result = text.join("");
         inputOutput.value = result;
       });
     </script>
