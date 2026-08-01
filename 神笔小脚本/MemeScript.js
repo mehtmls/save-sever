@@ -21,4 +21,9 @@ function rad(deg) {
 }
 console.info(Math.tan(rad(90)))
 console.error("左等于右")
-console.info((2147483648 >> 32) === (2147483648 << 32))
+console.info((10 >> 32) === (10 << 32))
+console.error("等于等于等于不等于等于等于")
+console.info(("111"===111)!==("111"==111))
+console.error("没有控制台")
+console.info((dir.toString())===(console.dir.toString()))
+console.warn("所以'console.'===''")
